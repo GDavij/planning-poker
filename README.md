@@ -38,5 +38,5 @@ Not Defined Yet.
 
 - `Typescript`
   - `React JS`
-  - `Material Angular`
+  - `ReactJS Material UI`
   - `Layered Architecture(Feature Based Organization)`
