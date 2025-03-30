@@ -28,10 +28,15 @@ Not Defined Yet.
 
 - `C# Programming Language`
 
-  - `ASPNET CORE Minimal Apis`
+  - `OAuth Firebase Integration`
+  - `ASPNET CORE`
   - `SignalR (Real Time Communication Library)`
-  - `Another project architecture maybe..?`
+  - `CQRS (Command Query Responsability Segregation)`
+  - `Notification Pattern(Instead of Domain Exceptions)`
+  - `Layered Architecture (Feature Based Organization)`
+
 
 - `Typescript`
   - `React JS`
-  - `Tailwind`
+  - `Material Angular`
+  - `Layered Architecture(Feature Based Organization)`
