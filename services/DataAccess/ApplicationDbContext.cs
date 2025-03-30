@@ -3,7 +3,6 @@ using DataAccess.Seeders;
 using Domain.Abstractions.DataAccess;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Match = System.Text.RegularExpressions.Match;
 
 namespace DataAccess;
 
@@ -16,7 +15,8 @@ internal class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Story> Stories { get; init; }
     public DbSet<StoryPoint> StoryPoints { get; init; }
 
-    public ApplicationDbContext(DbContextOptions options) 
+    
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
         : base(options)
     { }
 

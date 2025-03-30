@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="MediatR" Version="12.4.1" />
+      <PackageReference Include="MediatR.Contracts" Version="2.0.1" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
@@ -15,6 +16,10 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Commands\Accounts\" />
     </ItemGroup>
 
 </Project>

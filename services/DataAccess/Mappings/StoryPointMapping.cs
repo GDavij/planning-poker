@@ -13,6 +13,21 @@ internal class StoryPointMapping : IEntityTypeConfiguration<StoryPoint>
         builder.HasKey(sp => new { sp.StoryId, sp.MatchId, sp.AccountId })
             .HasName("PK_StoryPoints_StoryId_MatchId_AccountId");
 
+        builder.Property(sp => sp.AccountId)
+            .HasColumnName("AccountId");
+        
+        builder.Property(sp => sp.StoryId)
+            .HasColumnName("StoryId");
+
+        builder.Property(sp => sp.MatchId)
+            .HasColumnName("MatchId");
+
+        builder.HasOne(sp => sp.Participant)
+            .WithMany(p => p.StoryPoints)
+            .HasForeignKey(sp => new { sp.AccountId, sp.StoryId })
+            .HasConstraintName("FK_Participant_StoryPoint_AccountId_StoryId")
+            .OnDelete(DeleteBehavior.NoAction);
+        
         builder.Property(sp => sp.Points)
             .HasColumnName("Points")
             .IsRequired();

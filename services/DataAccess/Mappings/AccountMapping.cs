@@ -21,6 +21,8 @@ internal class AccountMapping : IEntityTypeConfiguration<Account>
             .HasMaxLength(80)
             .HasColumnName("Name");
 
+        builder.Ignore(a => a.Password);
+        
         builder.Property(a => a.Deleted)
             .HasColumnName("Deleted")
             .HasDefaultValue(false);

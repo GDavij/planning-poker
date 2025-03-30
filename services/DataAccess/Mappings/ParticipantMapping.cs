@@ -30,8 +30,9 @@ internal class ParticipantMapping : IEntityTypeConfiguration<Participant>
         
         builder.HasOne<Match>(p => p.Match)
             .WithMany(m => m.Participants)
-            .HasForeignKey(p => p.RoleId)
-            .HasConstraintName("FK_Participants_Matches_MatchId");
+            .HasForeignKey(p => p.MatchId)
+            .HasConstraintName("FK_Participants_Matches_MatchId")
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasMany<StoryPoint>(p => p.StoryPoints)
             .WithOne(sp => sp.Participant)
