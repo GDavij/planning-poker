@@ -25,7 +25,7 @@ export function HomeDashboard() {
   const [shouldOpenTakePartOfMatchModal, setShouldOpenTakePartOfMatchModal] =
     useState(false);
 
-  const [selectedMatchToJoin, setSelectedMatchToJoin] = useState<string>("");
+  const [selectedMatchToJoin, setSelectedMatchToJoin] = useState<number>(0);
 
   const [userCreatedMatches, setUserCreatedMatches] = useState<
     ListMatchesQueryResponse[]
@@ -137,9 +137,10 @@ export function HomeDashboard() {
       <CreateMatchModalForm
         open={shouldOpenCreateMatchModal}
         onClose={() => setShouldOpenCreateMatchModal(false)}
-        afterCreateEffect={() => {
+        afterCreateEffect={(matchId) => {
           setShouldOpenTakePartOfMatchModal(true);
           setShouldOpenCreateMatchModal(false);
+          setSelectedMatchToJoin(matchId);
         }}
       />
 
@@ -148,6 +149,7 @@ export function HomeDashboard() {
         onClose={() => setShouldOpenTakePartOfMatchModal(false)}
         afterSuccess={() => {}}
         matchId={selectedMatchToJoin}
+        authCode={null}
       />
     </>
   );

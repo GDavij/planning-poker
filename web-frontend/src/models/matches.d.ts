@@ -10,3 +10,7 @@ export interface ListRolesQueryResponse {
   name: string;
   abbreviation: string;
 }
+
+export interface StartMatchCommandResponse {
+  matchId: number;
+}

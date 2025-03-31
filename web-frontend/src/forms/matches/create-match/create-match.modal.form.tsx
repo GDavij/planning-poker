@@ -11,14 +11,14 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { startMatch } from "../../../services/match.service";
 
 type CreateMatchModalFormProps = {
   open: boolean;
   onClose: () => void;
-  afterCreateEffect: () => void;
+  afterCreateEffect: (matchId: number) => void;
 };
 
 type CreateMatchFormData = {
@@ -33,17 +33,22 @@ export function CreateMatchModalForm({
   const [showError, setShowError] = useState(false);
   const [isCreatingMatch, setIsCreatingMatch] = useState(false);
 
-  const { register, handleSubmit, formState } = useForm<CreateMatchFormData>({
-    defaultValues: {
-      description: "",
-    },
-  });
+  const { register, handleSubmit, formState, reset } =
+    useForm<CreateMatchFormData>({
+      defaultValues: {
+        description: "",
+      },
+    });
   const { errors } = formState;
+
+  useEffect(() => {
+    reset();
+  }, [open]);
 
   const createMatch = ({ description }: CreateMatchFormData) => {
     setIsCreatingMatch(true);
     startMatch(description)
-      .then(afterCreateEffect)
+      .then((res) => afterCreateEffect(res.data.matchId))
       .catch((err) => {
         console.error({ err });
         setShowError(true);

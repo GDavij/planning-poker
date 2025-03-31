@@ -12,7 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(cfg =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        cfg.EnableDetailedErrors = true;
+    }
+});
 
 builder.Services.InjectUseCases();
 builder.Services.InjectFirebaseAuth();
@@ -73,7 +79,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<MatchHub>("/matchhub");
+app.MapHub<MatchHub>("/matchHub");
 
 
 await app.RunAsync();

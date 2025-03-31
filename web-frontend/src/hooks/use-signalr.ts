@@ -1,46 +1,65 @@
-import { useEffect, useState } from "react";
 import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
   LogLevel,
 } from "@microsoft/signalr";
+import { useEffect, useState } from "react";
+import { suspendWhileTrueAsyncFor as suspendAsyncWhile } from "../helpers/async.helper";
 
-export function useSignalR() {
-  const [signalrClient, setSignalrClient] = useState<HubConnection | null>(
-    null,
-  );
-
-  const connectIfNot = () => {
-    if (
-      [
-        HubConnectionState.Disconnected,
-        HubConnectionState.Reconnecting,
-      ].includes(signalrClient!.state)
-    ) {
-      return signalrClient?.start();
-    }
-
-    return Promise.resolve();
-  };
-
+export function useSignalR(hubName: string) {
   const createClient = () =>
     new HubConnectionBuilder()
-      .withUrl(import.meta.env.VITE_API_DOMAIN, {
+      .withUrl(`${import.meta.env.VITE_SIGNALR_HUB_DOMAIN}/${hubName}`, {
         withCredentials: true,
       })
-      .configureLogging(LogLevel.Trace)
+      .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect()
       .build();
 
+  const registerEndpointFor = (
+    signalRClient: HubConnection,
+    endpointName: string,
+    handler: (...args: unknown[]) => Promise<void> | void,
+  ) => {
+    signalRClient.on(endpointName, handler);
+  };
+
+  const invokeAsyncFor = async (
+    signalRClient: HubConnection,
+    methodName: string,
+    ...args: unknown[]
+  ): Promise<unknown> => {
+    const cannotInvokeHubSinceItIsNotConnected = () =>
+      signalRClient.state !== HubConnectionState.Connected;
+
+    // Block SignalR Hub call till handshake
+    await suspendAsyncWhile(cannotInvokeHubSinceItIsNotConnected);
+
+    if (args.length > 0) {
+      return signalRClient
+        .invoke(methodName, args)
+        .then((res) => {
+          console.log({ success: res });
+        })
+        .catch((err) => console.error({ err }));
+    } else {
+      return signalRClient
+        .invoke(methodName)
+        .then((res) => {
+          console.log({ success: res });
+        })
+        .catch((err) => console.error({ err }));
+    }
+  };
+
+  const [signalRClient] = useState<HubConnection>(createClient());
+
   useEffect(() => {
-    setSignalrClient(createClient());
+    if (signalRClient.state === HubConnectionState.Disconnected) {
+      signalRClient.start();
+    }
+  }, [hubName]);
 
-    return () => {
-      signalrClient
-        ?.stop()
-        .then(() => console.log("SignalR connection closed"));
-    };
-  }, []);
-
-  return { signalrClient, connectIfNot };
+  return { signalRClient, registerEndpointFor, invokeAsyncFor };
 }

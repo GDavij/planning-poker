@@ -34,14 +34,6 @@ export function SignInForm() {
         const accessInfo =
           GoogleAuthProvider.credentialFromResult(userCredential);
 
-        console.log({
-          accessInfo,
-          userCredential,
-          token: userCredential.user.getIdToken(),
-        });
-
-        console.log({ cookie: document.cookie });
-
         userCredential.user
           .getIdToken()
           .then((token) => saveSession(token))

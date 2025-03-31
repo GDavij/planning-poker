@@ -13,15 +13,20 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { listMatchRoles } from "../../../services/match.service";
+import {
+  listMatchRoles,
+  takePartOfMatchAs,
+} from "../../../services/match.service";
 import { ListRolesQueryResponse } from "../../../models/matches";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 
 type TakePartOfMatchModalFormProps = {
   open: boolean;
   onClose: () => void;
   afterSuccess: () => void;
-  matchId: string;
+  matchId: number;
+  authCode: string | null;
 };
 
 type TakePartOfMatchModalFormData = {
@@ -29,38 +34,74 @@ type TakePartOfMatchModalFormData = {
   shouldSpectate: boolean;
 };
 
+const shouldObservateOptions = [
+  {
+    value: true,
+    label: "Yes",
+  },
+  {
+    value: false,
+    label: "No",
+  },
+];
+
 export function TakePartOfMatchModalForm({
   open,
   onClose,
   afterSuccess,
   matchId,
+  authCode = null,
 }: TakePartOfMatchModalFormProps) {
-  const [showError, setShowError] = useState(false);
   const [roles, setRoles] = useState<ListRolesQueryResponse[]>([]);
 
   const [abortController] = useState(new AbortController());
+  const navigate = useNavigate();
+
+  const [isTakingPartOfMatch, setIsTakingPartOfMatch] = useState(false);
 
   const loadRoles = () => {
+    setIsTakingPartOfMatch(true);
+
     listMatchRoles(abortController)
       .then((res) => setRoles(res.data))
       .then(() => setValue("roleId", roles[0].roleId))
       .catch((err) => {
         console.error({ err });
-        setShowError(true);
       })
-      .finally(() => {});
+      .finally(() => {
+        setIsTakingPartOfMatch(false);
+      });
   };
 
   useEffect(() => {
-    loadRoles();
+    if (roles.length == 0) {
+      loadRoles();
+    }
+
+    reset();
 
     return () => {};
-  }, [matchId]);
+  }, [open]);
 
-  const { register, handleSubmit, watch, setValue, formState } =
+  const { register, handleSubmit, watch, setValue, reset, formState } =
     useForm<TakePartOfMatchModalFormData>();
 
   const { errors } = formState;
+
+  const joinMatch = (joinData: TakePartOfMatchModalFormData) => {
+    takePartOfMatchAs(
+      joinData.roleId,
+      Boolean(joinData.shouldSpectate),
+      matchId,
+      authCode,
+    )
+      .then((res) => {
+        navigate(`/match/${matchId}`);
+      })
+      .catch((err) => {
+        console.error({ err });
+      });
+  };
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -89,47 +130,60 @@ export function TakePartOfMatchModalForm({
             <Typography variant="h5"> Join Match! </Typography>
           </Box>
 
-          <Stack spacing={2}>
-            <TextField
-              id="roleId"
-              label="What's is your role?"
-              error={!!errors.roleId}
-              helperText={errors.roleId?.message}
-              {...register("roleId", {
-                required: "Role is required",
-              })}
-              value={watch("roleId") || ""}
-              onChange={(e) => setValue("roleId", Number(e.target.value))}
-              select
-            >
-              {roles.map((r) => (
-                <MenuItem key={r.roleId} value={r.roleId}>
-                  {r.name} {!!r.abbreviation ? r.abbreviation : ""}
-                </MenuItem>
-              ))}
-            </TextField>
+          <form onSubmit={handleSubmit(joinMatch)}>
+            <Stack spacing={2}>
+              <TextField
+                id="roleId"
+                label="What's is your role?"
+                error={!!errors.roleId}
+                helperText={errors.roleId?.message}
+                {...register("roleId", {
+                  required: "Role is required",
+                })}
+                value={watch("roleId") || ""}
+                onChange={(e) => setValue("roleId", Number(e.target.value))}
+                select
+              >
+                {roles.map((r) => (
+                  <MenuItem key={r.roleId} value={r.roleId}>
+                    {r.name} {!!r.abbreviation ? r.abbreviation : ""}
+                  </MenuItem>
+                ))}
+              </TextField>
 
-            <TextField
-              id="shouldObseravate"
-              label="Gonna observate?"
-              error={!!errors.roleId}
-              helperText={errors.roleId?.message}
-              {...register("roleId", {
-                required: "Role is required",
-              })}
-              value={watch("roleId") || ""}
-              onChange={(e) => setValue("roleId", Number(e.target.value))}
-              select
-            >
-              {roles.map((r) => (
-                <MenuItem key={r.roleId} value={r.roleId}>
-                  {r.name} {!!r.abbreviation ? r.abbreviation : ""}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
+              <TextField
+                id="shouldObseravate"
+                label="Gonna observate?"
+                error={!!errors.shouldSpectate}
+                helperText={errors.shouldSpectate?.message}
+                {...register("shouldSpectate", {
+                  required:
+                    "You need to say if you are gonna join as observer (Can be changed)",
+                })}
+                value={watch("shouldSpectate") || false}
+                onChange={(e) =>
+                  setValue("shouldSpectate", Boolean(e.target.value))
+                }
+                select
+              >
+                {shouldObservateOptions.map((r) => (
+                  <MenuItem key={r.value} value={r.value}>
+                    {r.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
 
-          <Button variant="contained"> Join </Button>
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={isTakingPartOfMatch}
+              loading={isTakingPartOfMatch}
+            >
+              {" "}
+              Join{" "}
+            </Button>
+          </form>
         </Card>
       </Box>
     </Modal>

@@ -4,6 +4,7 @@ import { CssBaseline } from "@mui/material";
 import { LandingPage } from "./pages/landing-page";
 import { SignInPage } from "./pages/auth/signin/signin";
 import { HomeDashboard } from "./pages/dashboard/home.dashboard";
+import { MatchGamePage } from "./pages/matches/match-game";
 
 const CssLayout = () => {
   return (
@@ -34,6 +35,10 @@ export const routes = createBrowserRouter([
           {
             path: "dashboard",
             Component: HomeDashboard,
+          },
+          {
+            path: "match/:matchId",
+            Component: MatchGamePage,
           },
         ],
       },

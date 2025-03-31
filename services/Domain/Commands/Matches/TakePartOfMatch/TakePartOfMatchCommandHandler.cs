@@ -18,10 +18,12 @@ public class TakePartOfMatchCommandHandler : IRequestHandler<TakePartOfMatchComm
     public TakePartOfMatchCommandHandler(
         IApplicationDbContext dbContext,
         INotificationService notificationService,
+        ICurrentAccount currentAccount,
         IAuthenticationService authService)
     {
         _dbContext = dbContext;
         _notificationService = notificationService;
+        _currentAccount = currentAccount;
         _authService = authService;
     }
 

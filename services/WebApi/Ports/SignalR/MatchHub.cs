@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace WebApi.Ports.SignalR;
 
 [Authorize]
-public class MatchHub : Hub<IMatchClient>, IMatchClient
+public class MatchHub : Hub<IMatchClient>, IMatchHub
 {
     private readonly IMediator _mediator;
 

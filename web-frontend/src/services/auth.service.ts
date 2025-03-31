@@ -1,7 +1,6 @@
 import { api } from "./axios.service";
 
 export function saveSession(token: string) {
-  console.log(token);
   return api.post<
     {
       oAuthToken: string;
