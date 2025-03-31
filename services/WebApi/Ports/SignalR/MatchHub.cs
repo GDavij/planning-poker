@@ -44,6 +44,11 @@ public class MatchHub : Hub<IMatchClient>, IMatchHub
         throw new NotImplementedException();
     }
 
+    public async Task JoinMatch(long matchId)
+    {
+        
+    }
+    
     // private Task NotifyPlayerJoined()
     // { }
     //

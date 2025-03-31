@@ -8,4 +8,5 @@ public interface IMatchHub
     Task RemoveStory();
     Task StartMatch();
     Task EndMatch();
+    Task JoinMatch();
 }

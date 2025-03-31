@@ -1,5 +1,7 @@
 using Domain.Abstractions;
+using Domain.Abstractions.Shared;
 using Domain.Services;
+using Domain.Services.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Domain;
@@ -14,7 +16,8 @@ public static class DependencyInjection
         });
 
         services.AddScoped<INotificationService, NotificationService>();
-
+        services.AddSingleton<IMatchAllocationService, MatchAllocationService>();
+        
         return services;
     }
 }
