@@ -1,3 +1,6 @@
+using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
+using System.Text;
 using Domain.Abstractions.Auth;
 using Domain.Entities;
 
@@ -20,17 +23,22 @@ public class FirebaseAuthenticationService : IAuthenticationService
     public Task<Guid> GenerateAuthCode(TimeSpan expiresIn, string customLabel)
     {
         var authCode = Guid.NewGuid();
+
+        var hashedCustomLabel = Encoding.ASCII.GetString(SHA256.HashData(Encoding.ASCII.GetBytes(customLabel)));
         
-        AuthCodes.Add(authCode, new AuthCodeRegistry(DateTime.UtcNow, expiresIn, customLabel));
+        AuthCodes.Add(authCode, new AuthCodeRegistry(DateTime.UtcNow, expiresIn, hashedCustomLabel));
 
         return Task.FromResult(authCode);
     }
 
     public Task<bool> HasValidAuthCode(Guid code, string customLabel)
     {
-        if (AuthCodes.TryGetValue(code, out AuthCodeRegistry authCodeRegistry))
+        var hashedCustomLabel = Encoding.ASCII.GetString(SHA256.HashData(Encoding.ASCII.GetBytes(customLabel)));
+        
+        if (AuthCodes.TryGetValue(code, out AuthCodeRegistry? authCodeRegistry))
         {
-            return Task.FromResult(authCodeRegistry.IsAlive() && authCodeRegistry.CustomLabel == customLabel);
+            return Task.FromResult(authCodeRegistry.IsAlive() &&
+                                   authCodeRegistry.CustomLabel == hashedCustomLabel);
         }
 
         return Task.FromResult(false);

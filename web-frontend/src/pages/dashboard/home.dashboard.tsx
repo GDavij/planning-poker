@@ -4,28 +4,21 @@ import {
   Card,
   Container,
   Divider,
-  Modal,
   Skeleton,
   Stack,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { CreateMatchModalForm } from "../../forms/matches/create-match/create-match.modal.form";
 import { listUserCreatedMatches } from "../../services/match.service";
 import { ListMatchesQueryResponse } from "../../models/matches";
-import { TakePartOfMatchModalForm } from "../../forms/matches/take-part-of-match/take-part-of-match.modal.form";
+import { useNavigate } from "react-router";
 
 export function HomeDashboard() {
   const [abortController] = useState(new AbortController());
 
+  const navigate = useNavigate();
+
   const [isLoadingCreatedMatches, setIsLoadingCreatedMatches] = useState(false);
-
-  const [shouldOpenCreateMatchModal, setShouldOpenCreateMatchModal] =
-    useState(false);
-  const [shouldOpenTakePartOfMatchModal, setShouldOpenTakePartOfMatchModal] =
-    useState(false);
-
-  const [selectedMatchToJoin, setSelectedMatchToJoin] = useState<number>(0);
 
   const [userCreatedMatches, setUserCreatedMatches] = useState<
     ListMatchesQueryResponse[]
@@ -43,6 +36,8 @@ export function HomeDashboard() {
   useEffect(() => {
     loadTop10CreatedMatches();
   }, []);
+
+  const createMatch = () => navigate("/dashboard/matches/new");
 
   return (
     <>
@@ -65,10 +60,7 @@ export function HomeDashboard() {
                 Join a Match
               </Button>
 
-              <Button
-                variant="contained"
-                onClick={() => setShouldOpenCreateMatchModal(true)}
-              >
+              <Button variant="contained" onClick={createMatch}>
                 {" "}
                 Create a new Match{" "}
               </Button>
@@ -133,24 +125,6 @@ export function HomeDashboard() {
           </Box>
         </Card>
       </Container>
-
-      <CreateMatchModalForm
-        open={shouldOpenCreateMatchModal}
-        onClose={() => setShouldOpenCreateMatchModal(false)}
-        afterCreateEffect={(matchId) => {
-          setShouldOpenTakePartOfMatchModal(true);
-          setShouldOpenCreateMatchModal(false);
-          setSelectedMatchToJoin(matchId);
-        }}
-      />
-
-      <TakePartOfMatchModalForm
-        open={shouldOpenTakePartOfMatchModal}
-        onClose={() => setShouldOpenTakePartOfMatchModal(false)}
-        afterSuccess={() => {}}
-        matchId={selectedMatchToJoin}
-        authCode={null}
-      />
     </>
   );
 }

@@ -1,61 +1,34 @@
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using WebApi.UseCases.Commands.Matches.ApproveJoinRequest;
+using WebApi.UseCases.Commands.Matches.JoinMatch;
 
 namespace WebApi.Ports.SignalR;
 
 [Authorize]
-public class MatchHub : Hub<IMatchClient>, IMatchHub
+public sealed class MatchHub : Hub
 {
-    private readonly IMediator _mediator;
+    private readonly IServiceProvider _sp;
 
-    public MatchHub(IMediator mediator)
+    public MatchHub(IServiceProvider sp)
     {
-        _mediator = mediator;
-    }
-    
-    public Task EstimateHistory()
-    {
-        throw new NotImplementedException();
+        _sp = sp;
     }
 
-    public Task AddStory()
+    public async Task JoinMatchAsync(long matchId)
     {
-        throw new NotImplementedException();
+        var handler = _sp.GetRequiredService<JoinMatchCommandHandler>();
+        await handler.Handle(new JoinMatchCommand(matchId, Context.ConnectionId), CancellationToken.None);
     }
 
-    public Task UpdateStory()
+    public async Task ApproveMatchAsync(ApproveJoinRequestCommand command)
     {
-        throw new NotImplementedException();
-    }
+        command = command with
+        {
+            ApproverConnectionId = Context.ConnectionId
+        };
 
-    public Task RemoveStory()
-    {
-        throw new NotImplementedException();
+        var handler = _sp.GetRequiredService<ApproveJoinRequestCommandHandler>();
+        await handler.Handle(command, CancellationToken.None);
     }
-
-    public Task StartMatch()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task EndMatch()
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task JoinMatch(long matchId)
-    {
-        
-    }
-    
-    // private Task NotifyPlayerJoined()
-    // { }
-    //
-    // private Task NotifyPlayerHasLostConnection()
-    // { }
-    //
-    // private Task NotifyPlayerHasReconnected()
-    // { }
-
 }

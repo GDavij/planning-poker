@@ -1,9 +1,9 @@
 using DataAccess;
-using Domain;
 using Firebase.Auth;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using WebApi;
 using WebApi.Ports.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,8 +20,8 @@ builder.Services.AddSignalR(cfg =>
     }
 });
 
-builder.Services.InjectUseCases();
 builder.Services.InjectFirebaseAuth();
+builder.Services.InjectUseCases();
 
 FirebaseApp.Create(new AppOptions
 {
@@ -80,6 +80,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<MatchHub>("/matchHub");
-
 
 await app.RunAsync();

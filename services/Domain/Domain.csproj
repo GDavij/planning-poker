@@ -7,9 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="12.4.1" />
-      <PackageReference Include="MediatR.Contracts" Version="2.0.1" />
-      <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
         <PrivateAssets>all</PrivateAssets>
@@ -19,7 +16,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Commands\Accounts\" />
+      <Reference Include="Microsoft.AspNetCore.SignalR.Core">
+        <HintPath>..\..\..\..\..\..\usr\lib64\dotnet\shared\Microsoft.AspNetCore.App\9.0.2\Microsoft.AspNetCore.SignalR.Core.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Commands\Accounts\CreateAccount\" />
+      <Folder Include="Commands\Matches\ApproveJoinRequest\" />
+      <Folder Include="Commands\Matches\CreateMatch\" />
+      <Folder Include="Commands\Matches\JoinMatch\" />
     </ItemGroup>
 
 </Project>

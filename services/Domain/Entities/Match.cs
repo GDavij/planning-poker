@@ -27,4 +27,9 @@ public class Match
     {
         Participants.Add(participant);
     }
+
+    public bool CheckParticipantIsAdmin(Participant participant)
+    {
+        return participant.AccountId == AccountId;
+    }
 }

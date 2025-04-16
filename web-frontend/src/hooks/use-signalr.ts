@@ -17,12 +17,23 @@ export function useSignalR(hubName: string) {
       .withAutomaticReconnect()
       .build();
 
-  const registerEndpointFor = (
+  const  registerEndpointFor = async (
     signalRClient: HubConnection,
     endpointName: string,
     handler: (...args: unknown[]) => Promise<void> | void,
   ) => {
-    signalRClient.on(endpointName, handler);
+    const cannotInvokeHubSinceItIsNotConnected = () =>
+      signalRClient.state !== HubConnectionState.Connected;
+
+    // Block SignalR Hub call till handshake
+    await suspendAsyncWhile(cannotInvokeHubSinceItIsNotConnected);
+
+    console.log({endpointName, handler})
+    signalRClient.on(endpointName,(args) => {
+      console.log({args});
+      handler(args);
+    }
+  );
   };
 
   const invokeAsyncFor = async (
@@ -38,7 +49,7 @@ export function useSignalR(hubName: string) {
 
     if (args.length > 0) {
       return signalRClient
-        .invoke(methodName, args)
+        .invoke(methodName, ...args)
         .then((res) => {
           console.log({ success: res });
         })

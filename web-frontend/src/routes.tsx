@@ -4,7 +4,10 @@ import { CssBaseline } from "@mui/material";
 import { LandingPage } from "./pages/landing-page";
 import { SignInPage } from "./pages/auth/signin/signin";
 import { HomeDashboard } from "./pages/dashboard/home.dashboard";
-import { MatchGamePage } from "./pages/matches/match-game";
+import { MatchGamePage } from "./pages/matches/match-connection-page";
+import { MatchPage } from "./pages/matches/match";
+import { CreateMatchPage } from "./pages/dashboard/matches/create-match.dashboard";
+import { JoinMatchPage } from "./pages/matches/join-match.page";
 
 const CssLayout = () => {
   return (
@@ -34,11 +37,37 @@ export const routes = createBrowserRouter([
           },
           {
             path: "dashboard",
-            Component: HomeDashboard,
+            children: [
+              {
+                path: "",
+                Component: HomeDashboard,
+              },
+              {
+                path: "matches",
+                Component: MatchGamePage,
+                children: [
+                  {
+                    path: "new",
+                    Component: CreateMatchPage,
+                  },
+                  {
+                    path: "join/:matchId",
+                    Component: JoinMatchPage,
+                  },
+                ],
+              },
+            ],
           },
+
           {
             path: "match/:matchId",
             Component: MatchGamePage,
+            children: [
+              {
+                path: "",
+                Component: MatchPage,
+              },
+            ],
           },
         ],
       },

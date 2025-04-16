@@ -38,5 +38,9 @@ internal class ParticipantMapping : IEntityTypeConfiguration<Participant>
             .WithOne(sp => sp.Participant)
             .HasForeignKey(sp => new { sp.AccountId, sp.MatchId })
             .HasConstraintName("FK_Participants_StoryPoints_AccountId_MatchId");
+
+        builder.Property(p => p.SignalRConnectionId)
+            .HasMaxLength(int.MaxValue)
+            .HasColumnName("SignalRConnectionId");
     }
 }

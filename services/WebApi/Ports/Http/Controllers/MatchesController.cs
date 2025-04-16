@@ -1,11 +1,9 @@
 using Domain.Abstractions;
-using Domain.Commands.Matches.CreateMatch;
-using Domain.Commands.Matches.TakePartOfMatch;
-using Domain.Queries.Matches.ListMatches;
-using Domain.Queries.Matches.ListRoles;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.UseCases.Commands.Matches.CreateMatch;
+using WebApi.UseCases.Queries.Matches.ListMatches;
+using WebApi.UseCases.Queries.Matches.ListRoles;
 
 namespace WebApi.Ports.Http.Controllers;
 
@@ -14,51 +12,33 @@ namespace WebApi.Ports.Http.Controllers;
 [Authorize]
 public class MatchesController : ControllerBase
 {
-    private readonly IMediator _mediator;
     private readonly INotificationService _notificationService;
 
-    public MatchesController(IMediator mediator, INotificationService notificationService)
+    public MatchesController(INotificationService notificationService)
     {
-        _mediator = mediator;
         _notificationService = notificationService;
     }
 
     [HttpPost("start")]
-    public async Task<IActionResult> StartNewMatch([FromBody] CreateMatchCommand command)
+    public async Task<IActionResult> StartNewMatch([FromBody] CreateMatchCommand command,
+        [FromServices] CreateMatchCommandHandler handler)
     {
-        var result = await _mediator.Send(command);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         return Created("/matches", result);
     }
 
-    [HttpPatch("take-part/{matchId}")]
-    public async Task<IActionResult> TakePartOfAMatch([FromRoute] long matchId, [FromBody] TakePartOfMatchCommand command)
-    {
-        command = command with
-        {
-            MatchId = matchId
-        };
-
-        await _mediator.Send(command);
-
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Accepted();
-    }
-
     [HttpGet]
-    public async Task<IActionResult> ListUserCreatedMatches([FromQuery] ListMatchesQuery query)
+    public async Task<IActionResult> ListUserCreatedMatches([FromQuery] ListMatchesQuery query,
+        [FromServices] ListMatchesQueryHandler handler, CancellationToken cancellationToken)
     {
-        return Ok(await _mediator.Send(query));
+        return Ok(await handler.Handle(query, cancellationToken));
     }
 
     [HttpGet("roles")]
-    public async Task<IActionResult> ListValidRoles()
+    public async Task<IActionResult> ListValidRoles([FromQuery] ListRolesQuery query,
+        [FromServices] ListRolesQueryHandler handler, CancellationToken cancellationToken)
     {
-        return Ok(await _mediator.Send(new ListRolesQuery()));
+        return Ok(await handler.Handle(query, cancellationToken));
     }
-    
 }

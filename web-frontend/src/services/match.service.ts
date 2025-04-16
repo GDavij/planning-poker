@@ -16,14 +16,24 @@ export function listUserCreatedMatches(
   });
 }
 
-export function startMatch(description: string) {
-  return api.post<StartMatchCommandResponse>("matches/start", { description });
+export function startMatchAs(
+  description: string,
+  roleId: number,
+  shouldSpectate: boolean,
+) {
+  return api.post<StartMatchCommandResponse>("matches/start", {
+    description,
+    roleId,
+    shouldObservate: shouldSpectate,
+  });
 }
 
 export function listMatchRoles(abortController: AbortController) {
-  return api.get<ListRolesQueryResponse[]>("matches/roles", {
-    signal: abortController.signal,
-  });
+  return api
+    .get<ListRolesQueryResponse[]>("matches/roles", {
+      signal: abortController.signal,
+    })
+    .then((r) => r.data);
 }
 
 export function takePartOfMatchAs(

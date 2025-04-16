@@ -9,7 +9,6 @@
 
     <ItemGroup>
         <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
-        <PackageReference Include="MediatR" Version="12.4.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
@@ -21,6 +20,10 @@
     <ItemGroup>
       <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
       <ProjectReference Include="..\Firebase.Auth\Firebase.Auth.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="UseCases\" />
     </ItemGroup>
 
 </Project>

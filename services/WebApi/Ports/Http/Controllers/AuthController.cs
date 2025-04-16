@@ -1,11 +1,9 @@
 using Domain.Abstractions;
-using Domain.Commands.Accounts.CreateAccount;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Exception = System.Exception;
+using WebApi.UseCases.Commands.Accounts.CreateAccount;
 
 namespace WebApi.Ports.Http.Controllers;
 
@@ -14,12 +12,10 @@ namespace WebApi.Ports.Http.Controllers;
 [Authorize]
 public class AuthController : ControllerBase
 {
-    private readonly IMediator _mediator;
     private readonly INotificationService _notificationService;
 
-    public AuthController(IMediator mediator, INotificationService notificationService)
+    public AuthController(INotificationService notificationService)
     {
-        _mediator = mediator;
         _notificationService = notificationService;
     }
 
@@ -52,9 +48,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("new-login")]
-    public async Task<IActionResult> CreateAccount([FromBody] CreateAccountCommand createAccountCommand)
+    public async Task<IActionResult> CreateAccount([FromBody] CreateAccountCommand createAccountCommand, [FromServices] CreateAccountCommandHandler handler)
     {
-        var result = await _mediator.Send(createAccountCommand);
+        var result = await handler.Handle(createAccountCommand, CancellationToken.None);
 
         if (_notificationService.HasNotifications())
         {
@@ -65,7 +61,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("autologin")]
-    public async Task<IActionResult> CreateGoogleAccount()
+    public async Task<IActionResult> CreateGoogleAccount([FromServices] CreateAccountCommandHandler handler)
     {
         try
         {
@@ -79,7 +75,7 @@ public class AuthController : ControllerBase
                 PhotoUrl = User.Claims.First(c => c.Type == "picture").Value
             };
 
-            var result = await _mediator.Send(createAccountCommand);
+            var result = await handler.Handle(createAccountCommand, CancellationToken.None);
 
             if (_notificationService.HasNotifications())
             {
