@@ -1,6 +1,7 @@
 import {
   ListMatchesQueryResponse,
   ListRolesQueryResponse,
+  Story,
   StartMatchCommandResponse,
 } from "../models/matches";
 import { api } from "./axios.service";
@@ -36,15 +37,19 @@ export function listMatchRoles(abortController: AbortController) {
     .then((r) => r.data);
 }
 
-export function takePartOfMatchAs(
-  roleId: number,
-  shouldSpectate: boolean,
-  matchId: number,
-  authCode: string | null = null,
-) {
-  return api.patch(`matches/take-part/${matchId}`, {
-    roleId,
-    shouldSpectate,
-    authCode,
-  });
+export function listMatchStories(matchId: number) {
+  return api
+    .get<Story[]>(`/matches/match/${matchId}/stories`)
+    .then((r) => r.data);
+}
+
+export function updateStory(story: Story) {
+  return api.put<void>(
+    `/matches/match/${story.matchId}/story/${story.storyId}/update`,
+    story,
+  );
+}
+
+export function createStory(story: Story) {
+  return api.post<void>(`/matches/match/${story.matchId}/story/add`, story);
 }

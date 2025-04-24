@@ -1,7 +1,6 @@
 import { HubConnection } from "@microsoft/signalr";
 import { createContext, useContext } from "react";
 import { useSignalR } from "../hooks/use-signalr";
-import { Outlet } from "react-router";
 
 export type ClientActionDeclarationFunc = (
   signalRClient: HubConnection,

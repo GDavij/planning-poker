@@ -21,11 +21,4 @@
       </Reference>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Commands\Accounts\CreateAccount\" />
-      <Folder Include="Commands\Matches\ApproveJoinRequest\" />
-      <Folder Include="Commands\Matches\CreateMatch\" />
-      <Folder Include="Commands\Matches\JoinMatch\" />
-    </ItemGroup>
-
 </Project>

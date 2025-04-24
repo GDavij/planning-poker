@@ -34,7 +34,8 @@ builder.Services.AddAuthentication()
         jwt.Authority = builder.Configuration.GetValue<string>("Firebase:Auth:TokenAuthorityUrl");
         jwt.Audience = builder.Configuration.GetValue<string>("Firebase:Auth:ProjectId");
         jwt.TokenValidationParameters.ValidIssuer = builder.Configuration.GetValue<string>("Firebase:Auth:ValidIssuerUrl");
-
+        
+        
         jwt.Events = new JwtBearerEvents
         {
             OnMessageReceived = ctx =>

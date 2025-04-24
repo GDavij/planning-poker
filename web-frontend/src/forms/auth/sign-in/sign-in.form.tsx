@@ -31,8 +31,7 @@ export function SignInForm() {
 
     signInWithPopup(auth, googleProvider)
       .then((userCredential) => {
-        const accessInfo =
-          GoogleAuthProvider.credentialFromResult(userCredential);
+        GoogleAuthProvider.credentialFromResult(userCredential);
 
         userCredential.user
           .getIdToken()

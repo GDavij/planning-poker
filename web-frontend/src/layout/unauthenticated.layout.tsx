@@ -39,7 +39,7 @@ const settings: Reference[] = [
 export function UnauthenticatedLayout() {
   return (
     <>
-      <AppBar position="static">
+      <AppBar position="static" sx={{ height: 60 }}>
         <Container maxWidth="xl">
           <Toolbar disableGutters></Toolbar>
         </Container>

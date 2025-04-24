@@ -11,8 +11,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ListRolesQueryResponse } from "../../../models/matches";
-import { listMatchRoles, startMatchAs } from "../../../services/match.service";
+import { ListRolesQueryResponse } from "../../models/matches";
+import { listMatchRoles, startMatchAs } from "../../services/match.service";
 import { useNavigate, useParams } from "react-router";
 
 type CreateMatchFormData = {
@@ -59,11 +59,7 @@ export function CreateMatchPage() {
     shouldSpectate,
   }: CreateMatchFormData) => {
     startMatchAs(description, roleId, shouldSpectate)
-      .then((r) => {
-        console.log({ r });
-        return r;
-      })
-      .then((r) => navigate(`/dashboard/matches/join/${r.data.matchId}`))
+      .then((res) => navigate(`/dashboard/matches/join/${res.data.matchId}`))
       .catch((errorStartingMatch) => console.error({ errorStartingMatch }));
   };
 

@@ -1,8 +1,9 @@
+using Domain.Abstractions;
 using Domain.Abstractions.Auth.Models;
 
 namespace Domain.Entities;
 
-public class Match
+public class Match : IAggregate
 {
     public long MatchId { get; init; }
     public long AccountId { get; init; }
@@ -28,8 +29,88 @@ public class Match
         Participants.Add(participant);
     }
 
-    public bool CheckParticipantIsAdmin(Participant participant)
+    public Story? RegisterNewStoryAs(
+        string name,
+        string? storyNumber,
+        short order,
+        INotificationService notificationService)
     {
-        return participant.AccountId == AccountId;
+        if (Stories.Any(s => s.StoryNumber == storyNumber))
+        {
+            notificationService.AddNotification("Story Number already registered.", "Story.DuplicatedNumber");
+        }
+
+        if (Stories.Any(s => s.Order == order))
+        {
+            notificationService.AddNotification($"Story with order {order} already registered.", "Story.DuplicatedOrder");
+        }
+
+        if (notificationService.HasNotifications())
+        {
+            return null;
+        }
+
+        var story = new Story(this, name, storyNumber, order);
+        
+        Stories.Add(story);
+
+        return story;
+    }
+
+    public bool HasAnyStoryInOrderToUpdateThatIsNot(Story storyToUpdate, short newOrder, out Story? storyWithSameOrder)
+    {
+        var storyWithCondition = Stories.FirstOrDefault(s => s.Order == newOrder &&
+                                                               s.StoryId != storyToUpdate.StoryId);
+
+        storyWithSameOrder = storyWithCondition;
+
+        return storyWithCondition is not null;
+    }
+
+    public void SwapOrderForStories(Story storyToUpdate, Story storyWithSameOrder)
+    {
+        short currentStoryToUpdateOrder = storyToUpdate.Order;
+        storyToUpdate.MoveTo(storyWithSameOrder.Order);
+        storyWithSameOrder.MoveTo(currentStoryToUpdateOrder);
+    }
+
+    public Story? GetStoryWithId(long storyId)
+    {
+        return Stories.FirstOrDefault(s => s.StoryId == storyId);
+    }
+    
+    
+    public void RemoveStory(Story story)
+    {
+        Stories.Remove(story);
+        ReorderStories(Stories);
+    }
+    
+    private void ReorderStories(ICollection<Story> stories)
+    {
+        short order = 1;
+        foreach (var story in stories)
+        {
+            story.MoveTo(order);
+
+            order++;
+        }
+    }
+
+    public bool HaveAllParticipantsThatAreNotSpectatorsVotedFor(Story story)
+    {
+        var ableToVoteParticipants = Participants.Where(p => p.IsSpectating is false);
+
+        foreach (var participant in ableToVoteParticipants)
+        {
+            if (story.HasVoteOf(participant))
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 }

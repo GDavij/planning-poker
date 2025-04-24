@@ -39,6 +39,22 @@ export function HomeDashboard() {
 
   const createMatch = () => navigate("/dashboard/matches/new");
 
+  const joinMatch = (match: ListMatchesQueryResponse) =>
+    navigate(`/dashboard/matches/join/${match.matchId}`);
+
+  const copyShareLinkForMatch = (match: ListMatchesQueryResponse) => {
+    const shareLink = `${window.location.origin}/dashboard/matches/join/${match.matchId}`;
+
+    navigator.clipboard
+      .writeText(shareLink)
+      .then(() => {
+        alert("Share link copied to clipboard");
+      })
+      .catch((err) => {
+        alert("An Error occurred when coping from clipboard");
+      });
+  };
+
   return (
     <>
       <Container>
@@ -74,7 +90,9 @@ export function HomeDashboard() {
 
             <Stack spacing={2}>
               {isLoadingCreatedMatches
-                ? [1, 2, 3].map(() => <Skeleton width="100%" height={120} />)
+                ? [1, 2, 3].map((cardIndex) => (
+                    <Skeleton key={cardIndex} width="100%" height={120} />
+                  ))
                 : userCreatedMatches.map((match) => (
                     <Card
                       sx={{
@@ -87,6 +105,7 @@ export function HomeDashboard() {
                         justifyContent: "space-between",
                         border: "1px solid #eee",
                       }}
+                      key={match.matchId}
                       elevation={3}
                     >
                       <Box>
@@ -103,11 +122,17 @@ export function HomeDashboard() {
                         }}
                       >
                         <Button>
-                          <Typography fontWeight={700}>
+                          <Typography
+                            fontWeight={700}
+                            onClick={() => copyShareLinkForMatch(match)}
+                          >
                             Copy Share Link
                           </Typography>
                         </Button>
-                        <Button variant="contained">
+                        <Button
+                          variant="contained"
+                          onClick={() => joinMatch(match)}
+                        >
                           <Typography fontWeight={700}>Join Match</Typography>
                         </Button>
                       </Box>

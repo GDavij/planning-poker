@@ -4,6 +4,7 @@ using Domain.Abstractions.DataAccess;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Ports.SignalR;
+using WebApi.UseCases.Queries.Matches.ListParticipants;
 
 namespace WebApi.UseCases.Commands.Matches.JoinMatch;
 
@@ -12,12 +13,14 @@ public class JoinMatchCommandHandler
     private readonly IApplicationDbContext _dbContext;
     private readonly ICurrentAccount _currentAccount;
     private readonly IHubContext<MatchHub> _matchHubContext;
+    private readonly ListParticipantsQueryHandler _listParticipantsQueryHandler;
 
-    public JoinMatchCommandHandler(IApplicationDbContext dbContext, ICurrentAccount currentAccount, IHubContext<MatchHub> matchHubContext)
+    public JoinMatchCommandHandler(IApplicationDbContext dbContext, ICurrentAccount currentAccount, IHubContext<MatchHub> matchHubContext, ListParticipantsQueryHandler listParticipantsQueryHandler)
     {
         _dbContext = dbContext;
         _currentAccount = currentAccount;
         _matchHubContext = matchHubContext;
+        _listParticipantsQueryHandler = listParticipantsQueryHandler;
     }
 
     public async Task<JoinMatchCommandResponse?> Handle(JoinMatchCommand request, CancellationToken cancellationToken)
@@ -51,7 +54,13 @@ public class JoinMatchCommandHandler
 
 
         participant.ConnectedAt(request.ConnectionId);
+        await _matchHubContext.Groups.AddToGroupAsync(request.ConnectionId, match.MatchId.ToString());
+        
         await _dbContext.SaveChangesAsync(CancellationToken.None);
+
+        var participants = await _listParticipantsQueryHandler.Handle(match.MatchId, CancellationToken.None);
+        
+        await _matchHubContext.Clients.Group(match.MatchId.ToString()).SendAsync("CurrentListOfParticipantsIs", participants, cancellationToken: cancellationToken);
         await _matchHubContext.Clients.Client(request.ConnectionId).SendAsync("ApproveJoinRequest", CancellationToken.None);
         
         return new JoinMatchCommandResponse();

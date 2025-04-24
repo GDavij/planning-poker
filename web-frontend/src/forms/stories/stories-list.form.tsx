@@ -1,0 +1,256 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSignalRContext } from "../../contexts/signalr.context";
+import { Story } from "../../models/matches";
+import { listMatchStories } from "../../services/match.service";
+import { useParams } from "react-router";
+import {
+  Button,
+  Container,
+  Divider,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { TextButton } from "../../components/button";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { animated, useSpring, useTransition } from "@react-spring/web";
+
+const StoryBar = styled(Stack)(({ theme }) => ({
+  height: "100%",
+  background: "#eeefff",
+  borderTopRightRadius: 12,
+  borderBottomRightRadius: 12,
+  overflow: "hidden",
+}));
+
+const StoriesContainer = styled(Stack)(({ theme }) => ({
+  borderRight: "2px solid #eef",
+  flex: 1,
+  overflow: "auto",
+  margin: 4,
+}));
+
+const StoryItem = styled(Stack)(({ theme }) => ({
+  minHeight: 100,
+  background: "#fefeff",
+  border: "1px solid #fff",
+  borderRadius: 6,
+  padding: "6px 12px",
+}));
+
+const AnimatedStoryItem = animated(StoryItem);
+
+const StoryActions = styled(Stack)(({ theme }) => ({
+  minHeight: 120,
+  background: "#ddf",
+  borderTop: "2px solid #fff",
+  padding: 6,
+}));
+
+interface StoryCardProps {
+  story: ListStoriesQueryResponse;
+  index: number;
+  moveStory: (dragIndex: number, hoverIndex: number) => void;
+}
+
+interface DragItem {
+  index: number;
+  id: string;
+  type: string;
+}
+
+export function StoryCard({ story, index, moveStory }: StoryCardProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const [{ handlerId }, drop] = useDrop({
+    accept: "story",
+    collect(monitor) {
+      return {
+        handlerId: monitor.getHandlerId(),
+      };
+    },
+    hover(item: DragItem, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+      // Get vertical middle
+      const hoverMiddleY =
+        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+      // Determine mouse position
+      const clientOffset = monitor.getClientOffset();
+
+      // Get pixels to the top
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+
+      // Dragging downwards
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+
+      // Dragging upwards
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      // Time to actually perform the action
+      moveStory(dragIndex, hoverIndex);
+
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: "story",
+    item: () => {
+      return { id: story.storyId, index };
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const springProps = useSpring({
+    scale: isDragging ? 1.05 : 1,
+    boxShadow: isDragging
+      ? "0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)"
+      : "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)",
+    opacity: isDragging ? 0.8 : 1,
+    immediate: (key) => key === "opacity" && !isDragging,
+    config: { mass: 1, tension: 500, friction: 40 },
+  });
+
+  const opacity = isDragging ? 0.4 : 1;
+  drag(drop(ref));
+
+  return (
+    <AnimatedStoryItem ref={ref} data-handler-id={handlerId}>
+      <Stack direction={"row"} spacing={4} justifyContent={"space-between"}>
+        <Stack width="100%" direction={"row"} justifyContent={"space-between"}>
+          <Typography>{story.name}</Typography>
+
+          <Typography>{story.storyId}</Typography>
+        </Stack>
+      </Stack>
+    </AnimatedStoryItem>
+  );
+}
+
+export function StoriesListForm() {
+  const { invokeAsyncFor, registerEndpointFor, signalRClient } =
+    useSignalRContext();
+
+  const matchId = Number(useParams()?.matchId);
+
+  const syncFetchStories = useMemo(() => listMatchStories(matchId), [matchId]);
+
+  useEffect(() => {
+    syncFetchStories.then((stories) => setStories(stories));
+  }, [syncFetchStories]);
+
+  useEffect(() => {
+    registerEndpointFor(signalRClient, "UpdateStoriesOfMatchWith", (stories) =>
+      setStories(stories as Story[]),
+    );
+  });
+
+  const [stories, setStories] = useState<Story[]>([]);
+  const transitions = useTransition(
+    stories.map((story, index) => ({
+      ...story,
+      key: story.storyId,
+      y: index * (100 + 16), // height of item + spacing
+    })),
+    {
+      from: { opacity: 0, y: -20 },
+      enter: ({ y }) => ({ opacity: 1, y }),
+      update: ({ y }) => ({ y }),
+      leave: { opacity: 0, height: 0 },
+      keys: (item) => item.storyId,
+      config: { mass: 1, tension: 280, friction: 30 },
+    },
+  );
+
+  const moveStory = useCallback((dragIndex: number, hoverIndex: number) => {
+    console.log({ dragIndex, hoverIndex });
+
+    setStories((prevStories) => {
+      const newStories = [...prevStories];
+      // Remove the dragged item
+      const draggedItem = newStories.splice(dragIndex, 1)[0];
+      // Insert it at the new position
+      newStories.splice(hoverIndex, 0, draggedItem);
+
+      // Update order property for each story
+      return newStories.map((story, index) => ({
+        ...story,
+        order: index + 1,
+      }));
+    });
+  }, []);
+
+  const saveStoriesOrder = useCallback(() => {
+    // Implement API call to save the new order
+    // updateStoriesOrder(matchId, stories);
+    console.log("Saving new order:", stories);
+  }, [stories, matchId]);
+
+  return (
+    <StoryBar>
+      <StoriesContainer spacing={2}>
+        <DndProvider backend={HTML5Backend}>
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: stories.length * (100 + 16),
+            }}
+          >
+            {transitions((style, story) => (
+              <animated.div
+                style={{
+                  ...style,
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  width: "100%",
+                }}
+              >
+                <StoryCard
+                  key={story.storyId}
+                  story={story}
+                  index={story.order - 1}
+                  moveStory={moveStory}
+                />
+              </animated.div>
+            ))}
+          </div>
+        </DndProvider>
+      </StoriesContainer>
+      <StoryActions>
+        <TextButton>Create Story</TextButton>
+      </StoryActions>
+    </StoryBar>
+  );
+}

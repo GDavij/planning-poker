@@ -4,10 +4,11 @@ import { CssBaseline } from "@mui/material";
 import { LandingPage } from "./pages/landing-page";
 import { SignInPage } from "./pages/auth/signin/signin";
 import { HomeDashboard } from "./pages/dashboard/home.dashboard";
-import { MatchGamePage } from "./pages/matches/match-connection-page";
-import { MatchPage } from "./pages/matches/match";
-import { CreateMatchPage } from "./pages/dashboard/matches/create-match.dashboard";
-import { JoinMatchPage } from "./pages/matches/join-match.page";
+import { MatchGamePage } from "./layout/match-connection.layout";
+import { CreateMatchPage } from "./pages/matches/create-match.dashboard";
+import { AuthenticatedLayout } from "./layout/authenticated.layout";
+import { PartyPage } from "./pages/matches/party/party-page";
+import { JoinMatchPage } from "./pages/matches/join/join-match.page";
 
 const CssLayout = () => {
   return (
@@ -35,37 +36,31 @@ export const routes = createBrowserRouter([
             path: "sign-in",
             Component: SignInPage,
           },
+        ],
+      },
+      {
+        path: "/dashboard",
+        Component: AuthenticatedLayout,
+        children: [
           {
-            path: "dashboard",
-            children: [
-              {
-                path: "",
-                Component: HomeDashboard,
-              },
-              {
-                path: "matches",
-                Component: MatchGamePage,
-                children: [
-                  {
-                    path: "new",
-                    Component: CreateMatchPage,
-                  },
-                  {
-                    path: "join/:matchId",
-                    Component: JoinMatchPage,
-                  },
-                ],
-              },
-            ],
+            path: "",
+            Component: HomeDashboard,
           },
-
           {
-            path: "match/:matchId",
+            path: "matches",
             Component: MatchGamePage,
             children: [
               {
-                path: "",
-                Component: MatchPage,
+                path: "new",
+                Component: CreateMatchPage,
+              },
+              {
+                path: "join/:matchId",
+                Component: JoinMatchPage,
+              },
+              {
+                path: "party/:matchId",
+                Component: PartyPage,
               },
             ],
           },
