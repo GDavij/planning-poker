@@ -19,7 +19,7 @@ export interface Story {
   storyId: number;
   matchId: number;
   name: string;
-  storyNumber?: string;
+  storyNumber: string;
   order: number;
   storyPoints: StoryPointResponse[];
 }
@@ -27,4 +27,18 @@ export interface Story {
 export interface StoryPointResponse {
   points: number;
   participantName: string;
+}
+
+export interface Participant {
+  accountId: number;
+  roleName: string;
+  isSpectating: boolean;
+  participantName: string;
+  votes: VoteWithoutPoints[];
+}
+
+export interface VoteWithoutPoints {
+  storyId: number;
+  hasVotedAlready: boolean;
+  points: number;
 }

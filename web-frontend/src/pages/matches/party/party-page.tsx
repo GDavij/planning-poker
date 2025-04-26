@@ -1,10 +1,17 @@
-import { Container, Grid2, Stack, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Card, Container, Grid2, Stack, Typography } from "@mui/material";
+import { memo, useEffect, useState } from "react";
 import { useSignalRContext } from "../../../contexts/signalr.context";
 import { Story } from "../../../models/matches";
 import { listMatchStories } from "../../../services/match.service";
 import { useParams } from "react-router";
 import { StoriesListForm } from "../../../forms/stories/stories-list.form";
+import { SignalRMatchHubServerEndpoints } from "../../../consts/signalr/signalr-match-hub.endpoints";
+import { AppCard } from "../../../components/app-card";
+import { HighlightPaper } from "../../../components/app-paper";
+import { useSnackbar } from "../../../components/snackbar";
+import { useDebounce } from "../../../hooks/debounce";
+import { useSpring, animated } from "@react-spring/web";
+import { CurrenlyShowingStoryViewer } from "../../../forms/stories/currentVotingStory.form";
 
 export function PartyPage() {
   const complexities = [
@@ -37,7 +44,6 @@ export function PartyPage() {
       description: "This gonna be good",
     },
   ];
-  const gridSpacing = 12 / complexities.length;
 
   const matchId = Number(useParams().matchId);
 
@@ -50,6 +56,12 @@ export function PartyPage() {
     listMatchStories(matchId).then((stories) => {
       setStories(stories);
     });
+
+    invokeAsyncFor(
+      signalRClient,
+      SignalRMatchHubServerEndpoints.JoinMatch,
+      Number(matchId),
+    );
 
     registerEndpointFor(
       signalRClient,
@@ -64,10 +76,48 @@ export function PartyPage() {
   return (
     <Stack sx={{ height: "100vh" }}>
       <Grid2 container sx={{ height: "100%" }}>
-        <Grid2 size={2}>
+        <Grid2 size={3} zIndex={6}>
           <StoriesListForm />
         </Grid2>
-        <Grid2 size={10}></Grid2>
+        <Grid2 size={9} sx={{ padding: 6 }}>
+          <Stack spacing={4}>
+            <CurrenlyShowingStoryViewer stories={stories} />
+            <Grid2>
+              <Grid2
+                container
+                spacing={2}
+                wrap="nowrap"
+                sx={{ overflowX: "auto", padding: 2 }}
+              >
+                {complexities.map((complexity) => (
+                  <Grid2 key={complexity.points} xs="auto">
+                    <Card
+                      sx={{
+                        padding: 2,
+                        textAlign: "center",
+                        cursor: "pointer",
+                        height: 150,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        "&:hover": {
+                          boxShadow: 6,
+                        },
+                      }}
+                    >
+                      <Typography variant="h5" fontWeight="bold">
+                        {complexity.points}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {complexity.description}
+                      </Typography>
+                    </Card>
+                  </Grid2>
+                ))}
+              </Grid2>
+            </Grid2>
+          </Stack>
+        </Grid2>
       </Grid2>
     </Stack>
   );

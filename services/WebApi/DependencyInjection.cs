@@ -9,6 +9,7 @@ using WebApi.UseCases.Commands.Stories.DeleteStory;
 using WebApi.UseCases.Commands.Stories.SelectStory;
 using WebApi.UseCases.Commands.Stories.UpdateStory;
 using WebApi.UseCases.Commands.Stories.VoteStory;
+using WebApi.UseCases.Queries.Accounts.Me;
 using WebApi.UseCases.Queries.Matches.ListMatches;
 using WebApi.UseCases.Queries.Matches.ListParticipants;
 using WebApi.UseCases.Queries.Matches.ListRoles;
@@ -23,6 +24,7 @@ public static class DependencyInjection
     {
         // Accounts
         services.AddScoped<CreateAccountCommandHandler>();
+        services.AddScoped<GetMeQueryHandler>();
         
         // Matches
         services.AddScoped<ApproveJoinRequestCommandHandler>();

@@ -26,6 +26,17 @@ public class SelectStoryCommandHandler
                                              s.MatchId == matchId))
         {
             await _hubContext.Clients.Group(matchId.ToString()).SendAsync("SelectStoryToVoteAs", storyId);
+
+            await foreach (var storyPoint in _dbContext.StoryPoints.Include(sp => sp.Participant)
+                                                                                 .Where(sp => sp.StoryId == storyId).AsAsyncEnumerable())
+            {
+                if (storyPoint.Participant.SignalRConnectionId is null)
+                {
+                    continue;
+                }
+
+                await _hubContext.Clients.Client(storyPoint.Participant.SignalRConnectionId).SendAsync("ParticipantVoteForStoryIs", storyPoint.Points);
+            }
             return;
         }
         

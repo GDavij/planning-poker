@@ -28,7 +28,7 @@ public class AddStoryCommandHandler
         var match = await _dbContext.Matches.Include(m => m.Stories)
                                             .FirstAsync(m => m.MatchId == matchId);
 
-        var createdStory = match.RegisterNewStoryAs(command.Name, command.StoryNumber, command.Order, _notificationService);
+        var createdStory = match.RegisterNewStoryAs(command.Name, command.StoryNumber, _notificationService);
 
         if (_notificationService.HasNotifications())
         {

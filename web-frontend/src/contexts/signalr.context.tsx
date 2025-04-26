@@ -14,9 +14,15 @@ export type InvokeServerActionFunc = (
   ...args: unknown[]
 ) => Promise<unknown>;
 
+export type DisconectFromEndpointFunc = (
+  signalRClient: HubConnection,
+  methodName: string,
+) => Promise<void>;
+
 export type SignalRContext = {
   registerEndpointFor: ClientActionDeclarationFunc;
   invokeAsyncFor: InvokeServerActionFunc;
+  disconnectFromEndpointFor: DisconectFromEndpointFunc;
   signalRClient: HubConnection;
 };
 
@@ -33,12 +39,21 @@ export function SignalRContextProvider({
   hubName,
   children,
 }: SignalRContextProps) {
-  const { signalRClient, registerEndpointFor, invokeAsyncFor } =
-    useSignalR(hubName);
+  const {
+    signalRClient,
+    registerEndpointFor,
+    invokeAsyncFor,
+    disconnectFromEndpointFor,
+  } = useSignalR(hubName);
 
   return (
     <signalRContext.Provider
-      value={{ invokeAsyncFor, registerEndpointFor, signalRClient }}
+      value={{
+        invokeAsyncFor,
+        registerEndpointFor,
+        disconnectFromEndpointFor,
+        signalRClient,
+      }}
     >
       {children}
     </signalRContext.Provider>

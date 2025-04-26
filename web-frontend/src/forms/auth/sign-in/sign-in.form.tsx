@@ -3,8 +3,13 @@ import { TextField, Button, Stack, Container, Typography } from "@mui/material";
 import { Google, Microsoft } from "@mui/icons-material";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import firebase from "../../../drivers/firebase";
-import { autoLogin, saveSession } from "../../../services/auth.service";
+import {
+  autoLogin,
+  getCurrentAccount,
+  saveSession,
+} from "../../../services/auth.service";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../../stores/auth-store";
 
 type AuthUserFormData = {
   email: string;

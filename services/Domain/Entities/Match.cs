@@ -28,21 +28,15 @@ public class Match : IAggregate
     {
         Participants.Add(participant);
     }
-
+    
     public Story? RegisterNewStoryAs(
         string name,
         string? storyNumber,
-        short order,
         INotificationService notificationService)
     {
-        if (Stories.Any(s => s.StoryNumber == storyNumber))
+        if (Stories.Any(s => s.StoryNumber == storyNumber && !string.IsNullOrWhiteSpace(s.StoryNumber)))
         {
             notificationService.AddNotification("Story Number already registered.", "Story.DuplicatedNumber");
-        }
-
-        if (Stories.Any(s => s.Order == order))
-        {
-            notificationService.AddNotification($"Story with order {order} already registered.", "Story.DuplicatedOrder");
         }
 
         if (notificationService.HasNotifications())
@@ -50,7 +44,13 @@ public class Match : IAggregate
             return null;
         }
 
-        var story = new Story(this, name, storyNumber, order);
+        short greatestStoryOrder = 0; 
+        if (Stories.Any()) 
+        {
+            greatestStoryOrder = Stories.Max(s => s.Order);
+        }
+
+        var story = new Story(this, name, storyNumber, (byte)(greatestStoryOrder + 1));
         
         Stories.Add(story);
 

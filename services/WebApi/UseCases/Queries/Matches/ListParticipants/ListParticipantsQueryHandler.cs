@@ -16,13 +16,18 @@ public class ListParticipantsQueryHandler
     {
         return _dbContext.Participants.Include(p => p.Role)
                                       .Include(p => p.Account)
+                                      .Include(p => p.Match)
+                                        .ThenInclude(m => m.Stories)
+                                            .ThenInclude(s => s.StoryPoints)
                                       .Where(p => p.MatchId == matchId)
                                       .Select(p => new ListParticipantsQueryResponse
                                       {
                                           IsSpectating = p.IsSpectating,
                                           AccountId = p.AccountId,
                                           ParticipantName = p.Account.Name,
-                                          RoleName = p.Role.Name
+                                          RoleName = p.Role.Name,
+                                          Votes = p.Match.Stories.Select(s => new VoteWithoutPoints(s.StoryId, s.StoryPoints.Any(sp => sp.AccountId == p.AccountId)))
+                                                                 .ToList()
                                       }).ToListAsync(cancellationToken);
     }
 }

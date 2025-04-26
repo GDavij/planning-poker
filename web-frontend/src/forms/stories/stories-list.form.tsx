@@ -1,29 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSignalRContext } from "../../contexts/signalr.context";
 import { Story } from "../../models/matches";
-import { listMatchStories } from "../../services/match.service";
+import {
+  deleteStory,
+  listMatchStories,
+  selectStoryToAnalyze,
+  updateStory,
+} from "../../services/match.service";
 import { useParams } from "react-router";
 import {
   Button,
-  Container,
-  Divider,
+  CircularProgress,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { TextButton } from "../../components/button";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { animated, useSpring, useTransition } from "@react-spring/web";
-
-const StoryBar = styled(Stack)(({ theme }) => ({
-  height: "100%",
-  background: "#eeefff",
-  borderTopRightRadius: 12,
-  borderBottomRightRadius: 12,
-  overflow: "hidden",
-}));
+import { useCreateStoryFormModal } from "./create-story.modal.form";
+import { useListSettleDetector } from "../../hooks/use-list-settle-detector";
+import { useSnackbar } from "../../components/snackbar";
+import { Delete, Edit, Visibility } from "@mui/icons-material";
+import { useConfirmation } from "../../components/confirmation-dialog";
+import { AppCard } from "../../components/app-card";
 
 const StoriesContainer = styled(Stack)(({ theme }) => ({
   borderRight: "2px solid #eef",
@@ -50,7 +52,7 @@ const StoryActions = styled(Stack)(({ theme }) => ({
 }));
 
 interface StoryCardProps {
-  story: ListStoriesQueryResponse;
+  story: Story;
   index: number;
   moveStory: (dragIndex: number, hoverIndex: number) => void;
 }
@@ -63,6 +65,9 @@ interface DragItem {
 
 export function StoryCard({ story, index, moveStory }: StoryCardProps) {
   const ref = useRef<HTMLDivElement>(null);
+
+  const { open } = useCreateStoryFormModal();
+  const { showSuccess, showError } = useSnackbar();
 
   const [{ handlerId }, drop] = useDrop({
     accept: "story",
@@ -144,13 +149,88 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
   const opacity = isDragging ? 0.4 : 1;
   drag(drop(ref));
 
+  const handleEdit = useCallback(
+    (story: Story) => {
+      open(story);
+    },
+    [story],
+  );
+
+  const { confirm } = useConfirmation();
+
+  const handleSelect = useCallback(
+    (story: Story) => {
+      selectStoryToAnalyze(story).catch(() => {
+        showError("Could not select story for analysis for now...");
+      });
+    },
+    [story],
+  );
+
+  const handleDelete = useCallback(
+    (story: Story) => {
+      confirm({
+        title: "Delete Story",
+        message: `Are you sure you want to delete "${story.name}"? This action cannot be undone.`,
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        severity: "error",
+      }).then((shouldDelete) => {
+        if (shouldDelete) {
+          deleteStory(story)
+            .then(() => showSuccess("Story deleted with Success"))
+            .catch(() => showError("Could not delete Story with Success"));
+        }
+      });
+    },
+    [story],
+  );
+
   return (
-    <AnimatedStoryItem ref={ref} data-handler-id={handlerId}>
+    <AnimatedStoryItem ref={ref} data-handler-id={handlerId} spacing={2}>
       <Stack direction={"row"} spacing={4} justifyContent={"space-between"}>
         <Stack width="100%" direction={"row"} justifyContent={"space-between"}>
-          <Typography>{story.name}</Typography>
+          <Paper
+            sx={{
+              paddingX: 1,
+              paddingY: 0.5,
+              background: "#ddf",
+            }}
+          >
+            <Typography fontWeight={700} color="#333">
+              {story.name}
+            </Typography>
+          </Paper>
 
-          <Typography>{story.storyId}</Typography>
+          <Typography>{story.storyNumber || "None"}</Typography>
+        </Stack>
+      </Stack>
+      <Stack direction={"row"} spacing={1}>
+        <Stack
+          justifyContent={"space-between"}
+          width={"100%"}
+          direction={"row"}
+        >
+          <Button
+            variant="text"
+            color="error"
+            onClick={() => handleDelete(story)}
+          >
+            <Delete />
+          </Button>
+
+          <Stack direction={"row"} spacing={1}>
+            <Button variant="text" color="warning">
+              <Edit onClick={() => handleEdit(story)} />
+            </Button>
+            <Button
+              variant="text"
+              color="primary"
+              onClick={() => handleSelect(story)}
+            >
+              <Visibility />
+            </Button>
+          </Stack>
         </Stack>
       </Stack>
     </AnimatedStoryItem>
@@ -158,20 +238,22 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
 }
 
 export function StoriesListForm() {
-  const { invokeAsyncFor, registerEndpointFor, signalRClient } =
-    useSignalRContext();
+  const { registerEndpointFor, signalRClient } = useSignalRContext();
 
   const matchId = Number(useParams()?.matchId);
-
   const syncFetchStories = useMemo(() => listMatchStories(matchId), [matchId]);
+  const { open } = useCreateStoryFormModal();
+  const { showSuccess, showError } = useSnackbar();
 
   useEffect(() => {
     syncFetchStories.then((stories) => setStories(stories));
   }, [syncFetchStories]);
 
   useEffect(() => {
-    registerEndpointFor(signalRClient, "UpdateStoriesOfMatchWith", (stories) =>
-      setStories(stories as Story[]),
+    registerEndpointFor(
+      signalRClient,
+      "UpdateStoriesOfMatchWith",
+      (serverStories) => setStories(serverStories as Story[]),
     );
   });
 
@@ -210,47 +292,105 @@ export function StoriesListForm() {
     });
   }, []);
 
-  const saveStoriesOrder = useCallback(() => {
-    // Implement API call to save the new order
-    // updateStoriesOrder(matchId, stories);
-    console.log("Saving new order:", stories);
-  }, [stories, matchId]);
+  const saveStoriesOrder = useCallback(
+    async (stories: Story[]) => {
+      try {
+        for (const story of stories) {
+          await updateStory(story);
+        }
+
+        return Promise.resolve().then(() => {
+          showSuccess("Update Stories with Success");
+          haveAppliedCallback();
+        });
+      } catch {
+        return Promise.reject(() => {
+          showError("An Error occurred while Updating Stories");
+        });
+      }
+    },
+    [stories, matchId],
+  );
+
+  const { hasDetectedChanges, haveAppliedCallback } = useListSettleDetector(
+    stories,
+    1500,
+    (stories) => {
+      saveStoriesOrder(stories);
+    },
+  );
+
+  const forceUpdateStories = () => {
+    saveStoriesOrder(stories);
+  };
 
   return (
-    <StoryBar>
-      <StoriesContainer spacing={2}>
-        <DndProvider backend={HTML5Backend}>
-          <div
-            style={{
-              position: "relative",
-              width: "100%",
-              height: stories.length * (100 + 16),
-            }}
+    <>
+      <AppCard
+        sx={{
+          borderTopRightRadius: 12,
+          borderBottomRightRadius: 12,
+        }}
+      >
+        <StoriesContainer spacing={2}>
+          <Tooltip title="Click to update now">
+            <Button
+              variant="outlined"
+              disabled={!hasDetectedChanges}
+              onClick={forceUpdateStories}
+            >
+              <Stack direction="row" alignItems={"center"} spacing={1}>
+                <Typography>
+                  {hasDetectedChanges
+                    ? "Waiting to persist stories changes"
+                    : "Stories"}
+                </Typography>
+                {hasDetectedChanges && <CircularProgress size={16} />}
+              </Stack>
+            </Button>
+          </Tooltip>
+          <Stack
+            spacing={2}
+            overflow={"scroll"}
+            height={"calc(100vh - 200px)"}
+            flexGrow={0}
           >
-            {transitions((style, story) => (
-              <animated.div
+            <DndProvider backend={HTML5Backend}>
+              <div
                 style={{
-                  ...style,
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
+                  position: "relative",
                   width: "100%",
+                  height: stories.length * (100 + 16),
                 }}
               >
-                <StoryCard
-                  key={story.storyId}
-                  story={story}
-                  index={story.order - 1}
-                  moveStory={moveStory}
-                />
-              </animated.div>
-            ))}
-          </div>
-        </DndProvider>
-      </StoriesContainer>
-      <StoryActions>
-        <TextButton>Create Story</TextButton>
-      </StoryActions>
-    </StoryBar>
+                {transitions((style, story) => (
+                  <animated.div
+                    style={{
+                      ...style,
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      width: "100%",
+                    }}
+                  >
+                    <StoryCard
+                      key={story.storyId}
+                      story={story}
+                      index={story.order - 1}
+                      moveStory={moveStory}
+                    />
+                  </animated.div>
+                ))}
+              </div>
+            </DndProvider>
+          </Stack>
+        </StoriesContainer>
+        <StoryActions>
+          <Button variant="contained" onClick={() => open(null)}>
+            Create Story
+          </Button>
+        </StoryActions>
+      </AppCard>
+    </>
   );
 }

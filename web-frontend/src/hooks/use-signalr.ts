@@ -53,6 +53,18 @@ export function useSignalR(hubName: string) {
     }
   };
 
+  const disconnectFromEndpointFor = async (
+    signalRClient: HubConnection,
+    endpointName: string,
+  ) => {
+    const cannotInvokeHubSinceItIsNotConnected = () =>
+      signalRClient.state !== HubConnectionState.Connected;
+
+    await suspendAsyncWhile(cannotInvokeHubSinceItIsNotConnected);
+
+    signalRClient.off(endpointName);
+  };
+
   const [signalRClient] = useState<HubConnection>(createClient());
 
   useEffect(() => {
@@ -61,5 +73,10 @@ export function useSignalR(hubName: string) {
     }
   }, [hubName]);
 
-  return { signalRClient, registerEndpointFor, invokeAsyncFor };
+  return {
+    signalRClient,
+    registerEndpointFor,
+    invokeAsyncFor,
+    disconnectFromEndpointFor,
+  };
 }

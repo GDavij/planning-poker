@@ -3,6 +3,7 @@ import {
   ListRolesQueryResponse,
   Story,
   StartMatchCommandResponse,
+  Participant,
 } from "../models/matches";
 import { api } from "./axios.service";
 
@@ -52,4 +53,20 @@ export function updateStory(story: Story) {
 
 export function createStory(story: Story) {
   return api.post<void>(`/matches/match/${story.matchId}/story/add`, story);
+}
+
+export function deleteStory(story: Story) {
+  return api.delete<void>(
+    `/matches/match/${story.matchId}/story/${story.storyId}`,
+  );
+}
+
+export function selectStoryToAnalyze(story: Story) {
+  return api.patch(`/matches/match/${story.matchId}/story/${story.storyId}`);
+}
+
+export function listParticipantsForMatch(matchId: number) {
+  return api
+    .get<Participant[]>(`/matches/match/${matchId}/participants`)
+    .then((r) => r.data);
 }

@@ -4,6 +4,7 @@ using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.UseCases.Commands.Accounts.CreateAccount;
+using WebApi.UseCases.Queries.Accounts.Me;
 
 namespace WebApi.Ports.Http.Controllers;
 
@@ -90,5 +91,10 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe(GetMeQueryHandler handler)
+    {
+        return Ok(await handler.Handle());
+    }
 }
 public record TokenRequest(string OAuthToken);

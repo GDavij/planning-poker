@@ -1,3 +1,4 @@
+import { Me } from "../models/auth";
 import { api } from "./axios.service";
 
 export function saveSession(token: string) {
@@ -13,4 +14,8 @@ export function saveSession(token: string) {
 
 export async function autoLogin() {
   return api.post("auth/autologin");
+}
+
+export async function getCurrentAccount() {
+  return api.get<Me>("auth/me").then((r) => r.data);
 }

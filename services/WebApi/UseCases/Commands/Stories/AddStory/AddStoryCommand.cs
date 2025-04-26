@@ -1,3 +1,3 @@
 namespace WebApi.UseCases.Commands.Stories.AddStory;
 
-public record AddStoryCommand(string Name, string? StoryNumber, short Order);
+public record AddStoryCommand(string Name, string? StoryNumber);
