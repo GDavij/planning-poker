@@ -10,6 +10,8 @@ import {
 } from "../../../services/auth.service";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../../stores/auth-store";
+import { useState } from "react";
+import { useSnackbar } from "../../../components/snackbar";
 
 type AuthUserFormData = {
   email: string;
@@ -23,6 +25,10 @@ export function SignInForm() {
 
   const navigate = useNavigate();
 
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const { showError } = useSnackbar();
+
   const redirectToDashboard = () => navigate("/dashboard");
 
   const signInEmailPassword = (data: AuthUserFormData) => {
@@ -30,6 +36,7 @@ export function SignInForm() {
   };
 
   const signInGoogle = () => {
+    setIsAuthenticating(true);
     const googleProvider = new GoogleAuthProvider();
 
     const auth = getAuth(firebase);
@@ -47,10 +54,10 @@ export function SignInForm() {
       })
       .catch((reject) => {
         console.error({ reject });
+        setIsAuthenticating(false);
+        showError("Failed to Login with Google.");
       });
   };
-
-  const signInMicrosoft = () => {};
 
   return (
     <Stack spacing={2}>
@@ -96,7 +103,12 @@ export function SignInForm() {
             helperText={errors.password?.message}
           />
 
-          <Button type="submit" variant="contained" color="primary">
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            loading={isAuthenticating}
+          >
             Sign In
           </Button>
         </Stack>
@@ -106,9 +118,6 @@ export function SignInForm() {
         <Container sx={{ display: "flex", justifyContent: "center" }}>
           <Button onClick={signInGoogle}>
             <Google />
-          </Button>
-          <Button>
-            <Microsoft />
           </Button>
         </Container>
       </Stack>

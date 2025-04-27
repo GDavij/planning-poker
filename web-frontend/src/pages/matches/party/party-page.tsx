@@ -1,8 +1,18 @@
-import { Card, Container, Grid2, Stack, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  Container,
+  Grid2,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { memo, useEffect, useState } from "react";
 import { useSignalRContext } from "../../../contexts/signalr.context";
-import { Story } from "../../../models/matches";
-import { listMatchStories } from "../../../services/match.service";
+import { Participant, Story, Vote } from "../../../models/matches";
+import {
+  listMatchStories,
+  voteForStory,
+} from "../../../services/match.service";
 import { useParams } from "react-router";
 import { StoriesListForm } from "../../../forms/stories/stories-list.form";
 import { SignalRMatchHubServerEndpoints } from "../../../consts/signalr/signalr-match-hub.endpoints";
@@ -12,6 +22,9 @@ import { useSnackbar } from "../../../components/snackbar";
 import { useDebounce } from "../../../hooks/debounce";
 import { useSpring, animated } from "@react-spring/web";
 import { CurrenlyShowingStoryViewer } from "../../../forms/stories/currentVotingStory.form";
+import { useParticipants } from "../../../stores/participants-store";
+import { useAuth } from "../../../stores/auth-store";
+import { useMatch } from "../../../stores/match-store";
 
 export function PartyPage() {
   const complexities = [
@@ -47,8 +60,18 @@ export function PartyPage() {
 
   const matchId = Number(useParams().matchId);
 
-  const { signalRClient, registerEndpointFor, invokeAsyncFor } =
-    useSignalRContext();
+  const { showSuccess, showError } = useSnackbar();
+
+  const {
+    signalRClient,
+    registerEndpointFor,
+    invokeAsyncFor,
+    disconnectFromEndpointFor,
+  } = useSignalRContext();
+
+  const { participants, voteOrReplace } = useParticipants();
+  const { accountId } = useAuth();
+  const { currentShowingStory } = useMatch();
 
   const [stories, setStories] = useState<Story[]>([]);
 
@@ -67,11 +90,52 @@ export function PartyPage() {
       signalRClient,
       "UpdateStoriesOfMatchWith",
       (stories) => {
-        console.log({ newStoriesFromSignalR: stories }); // Only for test purposes
         setStories(stories as Story[]);
       },
     );
+
+    registerEndpointFor(signalRClient, "SomeoneVoted", (vote) => {
+      const voteObj = vote as {
+        storyId: number;
+        complexity: number;
+        accountId: number;
+      };
+
+      voteOrReplace(voteObj.storyId, voteObj.complexity, voteObj.accountId);
+    });
+
+    return () => {
+      disconnectFromEndpointFor(signalRClient, "UpdateStoriesOfMatchWith");
+      disconnectFromEndpointFor(signalRClient, "SomeoneVoted");
+    };
   }, []);
+
+  const hasVotedFor = (
+    complexity: number,
+    participant: Participant | undefined,
+  ) => {
+    if (!participant) {
+      return false;
+    }
+
+    const hasVoted = participant.votes.some(
+      (v: Vote) =>
+        v.storyId == currentShowingStory?.storyId &&
+        v.hasVotedAlready &&
+        complexity == v.points,
+    );
+    return hasVoted;
+  };
+
+  const votePointsAs = (points: number) => {
+    voteForStory(matchId, currentShowingStory!.storyId, points)
+      .then(() => {
+        showSuccess(`Voted Story with a complexity about ${points} points`);
+      })
+      .catch(() => {
+        showError(`Could not vote story..., try again soon`);
+      });
+  };
 
   return (
     <Stack sx={{ height: "100vh" }}>
@@ -89,31 +153,45 @@ export function PartyPage() {
                 wrap="nowrap"
                 sx={{ overflowX: "auto", padding: 2 }}
               >
-                {complexities.map((complexity) => (
-                  <Grid2 key={complexity.points} xs="auto">
-                    <Card
-                      sx={{
-                        padding: 2,
-                        textAlign: "center",
-                        cursor: "pointer",
-                        height: 150,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        "&:hover": {
-                          boxShadow: 6,
-                        },
-                      }}
-                    >
-                      <Typography variant="h5" fontWeight="bold">
-                        {complexity.points}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {complexity.description}
-                      </Typography>
-                    </Card>
-                  </Grid2>
-                ))}
+                {currentShowingStory !== null &&
+                  complexities.map((complexity) => (
+                    <Grid2 key={complexity.points} xs="auto">
+                      <Button
+                        sx={{ background: "#0000" }}
+                        onClick={() => votePointsAs(complexity.points)}
+                      >
+                        <Card
+                          sx={{
+                            padding: 2,
+                            textAlign: "center",
+                            cursor: "pointer",
+                            height: 150,
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            "&:hover": {
+                              boxShadow: 6,
+                            },
+                            background: hasVotedFor(
+                              complexity.points,
+                              participants.find(
+                                (p) => p.accountId == accountId,
+                              ),
+                            )
+                              ? "#88d"
+                              : "#fafafa",
+                          }}
+                        >
+                          <Typography variant="h5" fontWeight="bold">
+                            {complexity.points}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {complexity.description}
+                          </Typography>
+                        </Card>
+                      </Button>
+                    </Grid2>
+                  ))}
               </Grid2>
             </Grid2>
           </Stack>

@@ -14,10 +14,14 @@ namespace WebApi.Ports.Http.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly INotificationService _notificationService;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(INotificationService notificationService)
+    public AuthController(INotificationService notificationService, IConfiguration configuration, ILogger<AuthController> logger)
     {
         _notificationService = notificationService;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     [HttpPost("save-session")]
@@ -28,9 +32,12 @@ public class AuthController : ControllerBase
         {
             var token = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(tokenRequest.OAuthToken);
 
+            var domain = _configuration.GetValue<string>("API_DOMAIN") ?? "localhost";
+            _logger.LogInformation("Got Current Domain as: {domain}", domain);
+            
             var cookieOptions = new CookieOptions
             {
-                Domain = "localhost",
+                Domain = domain,
                 Expires = DateTimeOffset.FromUnixTimeSeconds(token.ExpirationTimeSeconds),
                 Path = "/",
                 Secure = true,
@@ -87,6 +94,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception exception)
         {
+            _logger.LogError("Catch Exception when Trying to Authenticate Endpoint: {exception}", exception);
             return Unauthorized();
         }
     }

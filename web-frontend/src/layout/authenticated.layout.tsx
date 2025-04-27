@@ -10,7 +10,9 @@ export function AuthenticatedLayout() {
 
   useEffect(() => {
     getCurrentAccount()
-      .then((account) => setAccountIdAs(account.accountId))
+      .then((account) => {
+        setAccountIdAs(account.accountId);
+      })
       .catch(() => navigate("/sign-in"));
   }, []);
 

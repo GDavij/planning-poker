@@ -24,7 +24,7 @@ internal class StoryPointMapping : IEntityTypeConfiguration<StoryPoint>
 
         builder.HasOne(sp => sp.Participant)
             .WithMany(p => p.StoryPoints)
-            .HasForeignKey(sp => new { sp.AccountId, sp.StoryId })
+            .HasForeignKey(sp => new { sp.AccountId, sp.MatchId })
             .HasConstraintName("FK_Participant_StoryPoint_AccountId_StoryId")
             .OnDelete(DeleteBehavior.NoAction);
         

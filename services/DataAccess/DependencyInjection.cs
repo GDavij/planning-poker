@@ -1,4 +1,3 @@
-using DataAccess.Interceptors;
 using Domain.Abstractions.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,12 +9,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection InjectDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        // services.AddScoped<ParticipantResourceInterceptor>();
-        
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<IApplicationDbContext, ApplicationDbContext>((sp, options) =>
         {
-            // options.AddInterceptors(sp.GetRequiredService<ParticipantResourceInterceptor>());
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
+            }
             options.UseAzureSql(connectionString);
         });
 

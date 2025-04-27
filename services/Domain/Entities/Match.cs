@@ -28,7 +28,7 @@ public class Match : IAggregate
     {
         Participants.Add(participant);
     }
-    
+
     public Story? RegisterNewStoryAs(
         string name,
         string? storyNumber,
@@ -112,5 +112,10 @@ public class Match : IAggregate
         }
 
         return true;
+    }
+
+    public void Close()
+    {
+        HasClosed = true;
     }
 }

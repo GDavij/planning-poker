@@ -1,0 +1,39 @@
+{
+    "routes": [
+      {
+        "route": "/assets/*.js",
+        "headers": {
+          "content-type": "application/javascript; charset=utf-8"
+        }
+      },
+      {
+        "route": "/assets/*.css",
+        "headers": {
+          "content-type": "text/css; charset=utf-8"
+        }
+      },
+      {
+        "route": "/*",
+        "rewrite": "/index.html"
+      }
+    ],
+    "navigationFallback": {
+      "rewrite": "/index.html",
+      "exclude": ["/images/*", "/assets/*", "/*.{css,js,json,ico,png}"]
+    },
+    "responseOverrides": {
+      "404": {
+        "rewrite": "/index.html",
+        "statusCode": 200
+      }
+    },
+    "mimeTypes": {
+      ".js": "application/javascript",
+      ".mjs": "application/javascript",
+      ".css": "text/css",
+      ".json": "application/json",
+      ".ico": "image/x-icon",
+      ".png": "image/png",
+      ".svg": "image/svg+xml"
+    }
+}

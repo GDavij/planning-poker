@@ -35,7 +35,7 @@ public class SelectStoryCommandHandler
                     continue;
                 }
 
-                await _hubContext.Clients.Client(storyPoint.Participant.SignalRConnectionId).SendAsync("ParticipantVoteForStoryIs", storyPoint.Points);
+                await _hubContext.Clients.Client(storyPoint.Participant.SignalRConnectionId).SendAsync("ParticipantVoteForStoryIs", new { StoryId = storyPoint.StoryId, AccountId = storyPoint.AccountId, Points = storyPoint.Points });
             }
             return;
         }

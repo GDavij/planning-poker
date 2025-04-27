@@ -2,6 +2,7 @@ using Domain.Abstractions;
 using WebApi.Services;
 using WebApi.UseCases.Commands.Accounts.CreateAccount;
 using WebApi.UseCases.Commands.Matches.ApproveJoinRequest;
+using WebApi.UseCases.Commands.Matches.CloseMatch;
 using WebApi.UseCases.Commands.Matches.CreateMatch;
 using WebApi.UseCases.Commands.Matches.JoinMatch;
 using WebApi.UseCases.Commands.Stories.AddStory;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<CreateMatchCommandHandler>();
         services.AddScoped<JoinMatchCommandHandler>();
         services.AddScoped<ListMatchesQueryHandler>();
+        services.AddScoped<CloseMatchCommandHandler>();
         
         // Stories
         services.AddScoped<AddStoryCommandHandler>();

@@ -2,6 +2,7 @@ using Domain.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Filters;
+using WebApi.UseCases.Commands.Matches.CloseMatch;
 using WebApi.UseCases.Commands.Matches.CreateMatch;
 using WebApi.UseCases.Commands.Stories.AddStory;
 using WebApi.UseCases.Commands.Stories.DeleteStory;
@@ -166,4 +167,18 @@ public class MatchesController : ControllerBase
         return Accepted();
     }
 
+    [HttpPatch("match/{matchId}/finish")]
+    [OnlyParticipantsOfMatchFilter]
+    public async Task<IActionResult> FinishMatch(
+        [FromRoute] long matchId,
+        [FromServices] CloseMatchCommandHandler handler)
+    {
+        await handler.Handle(matchId);
+        if (_notificationService.HasNotifications())
+        {
+            return Conflict(_notificationService.GetNotifications());
+        }
+
+        return Accepted();
+    }
 }

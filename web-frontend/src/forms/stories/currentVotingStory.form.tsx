@@ -59,6 +59,10 @@ export function CurrenlyShowingStoryViewer({
         debouncedFn(storyId as number),
       );
     });
+
+    return () => {
+      disconnectFromEndpointFor(signalRClient, "SelectStoryToVoteAs");
+    };
   }, [stories]);
 
   useEffect(() => {

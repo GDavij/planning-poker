@@ -13,6 +13,7 @@ export const useParticipants = create<PartyParticipantsActions>((set) => ({
   voteOrReplace: (storyId, points, accountId) =>
     set((state) => {
       const stateCopy = { ...state };
+
       if (
         stateCopy.participants.some((p) =>
           p.votes.some((v) => v.storyId == storyId),
@@ -21,6 +22,7 @@ export const useParticipants = create<PartyParticipantsActions>((set) => ({
         let currentVote = stateCopy.participants
           .find((p) => p.accountId == accountId)!
           .votes.find((v) => v.storyId == storyId);
+        currentVote!.hasVotedAlready = true;
         currentVote!.points = points;
 
         return stateCopy;

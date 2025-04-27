@@ -1,3 +1,6 @@
+using Domain.Abstractions;
+using Domain.Abstractions.DataAccess;
+
 namespace Domain.Entities;
 
 public class Story
@@ -38,7 +41,7 @@ public class Story
 
     public bool HasVoteOf(Participant participant)
     {
-        return StoryPoints.Any(p => p.AccountId == participant.AccountId);
+        return StoryPoints.Any(p => p.AccountId == participant.AccountId && p.StoryId == StoryId);
     }
 
     public void Revote(short points, Participant participant)
@@ -47,8 +50,9 @@ public class Story
         storyPoint.RevaliateComplexityTo(points);
     }
     
-    public void Vote(short points)
+    public void Vote(short points, Participant participant)
     {
-        StoryPoints.Add(new StoryPoint(this, points));
+        var storyPoint = new StoryPoint(this, points, participant);
+        StoryPoints.Add(storyPoint);
     }
 }

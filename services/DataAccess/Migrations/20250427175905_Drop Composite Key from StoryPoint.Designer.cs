@@ -3,6 +3,7 @@ using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250427175905_Drop Composite Key from StoryPoint")]
+    partial class DropCompositeKeyfromStoryPoint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,26 +275,33 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Domain.Entities.StoryPoint", b =>
                 {
-                    b.Property<long>("StoryId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("StoryId");
+                    b.Property<long>("StoryPointId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
 
-                    b.Property<long>("MatchId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("MatchId");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("StoryPointId"));
 
                     b.Property<long>("AccountId")
                         .HasColumnType("bigint")
                         .HasColumnName("AccountId");
 
+                    b.Property<long>("MatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("MatchId");
+
                     b.Property<short>("Points")
                         .HasColumnType("smallint")
                         .HasColumnName("Points");
 
-                    b.HasKey("StoryId", "MatchId", "AccountId")
-                        .HasName("PK_StoryPoints_StoryId_MatchId_AccountId");
+                    b.Property<long>("StoryId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("StoryId");
 
-                    b.HasIndex("AccountId", "MatchId");
+                    b.HasKey("StoryPointId");
+
+                    b.HasIndex("StoryId");
+
+                    b.HasIndex("AccountId", "StoryId");
 
                     b.ToTable("StoryPoints", (string)null);
                 });
@@ -360,7 +370,7 @@ namespace DataAccess.Migrations
 
                     b.HasOne("Domain.Entities.Participant", "Participant")
                         .WithMany("StoryPoints")
-                        .HasForeignKey("AccountId", "MatchId")
+                        .HasForeignKey("AccountId", "StoryId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_Participant_StoryPoint_AccountId_StoryId");

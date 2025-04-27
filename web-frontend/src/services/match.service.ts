@@ -70,3 +70,13 @@ export function listParticipantsForMatch(matchId: number) {
     .get<Participant[]>(`/matches/match/${matchId}/participants`)
     .then((r) => r.data);
 }
+
+export function voteForStory(matchId: number, storyId: number, points: number) {
+  return api.patch<void>(
+    `/matches/match/${matchId}/story/${storyId}/vote/${points}`,
+  );
+}
+
+export function finishMatch(matchId: number) {
+  return api.patch<void>(`matches/match/${matchId}/finish`);
+}

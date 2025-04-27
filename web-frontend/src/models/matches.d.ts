@@ -34,10 +34,10 @@ export interface Participant {
   roleName: string;
   isSpectating: boolean;
   participantName: string;
-  votes: VoteWithoutPoints[];
+  votes: Vote[];
 }
 
-export interface VoteWithoutPoints {
+export interface Vote {
   storyId: number;
   hasVotedAlready: boolean;
   points: number;

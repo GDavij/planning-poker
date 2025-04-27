@@ -3,11 +3,12 @@ import { useSignalRContext } from "../../contexts/signalr.context";
 import { Story } from "../../models/matches";
 import {
   deleteStory,
+  finishMatch,
   listMatchStories,
   selectStoryToAnalyze,
   updateStory,
 } from "../../services/match.service";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   Button,
   CircularProgress,
@@ -188,21 +189,46 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
 
   return (
     <AnimatedStoryItem ref={ref} data-handler-id={handlerId} spacing={2}>
-      <Stack direction={"row"} spacing={4} justifyContent={"space-between"}>
-        <Stack width="100%" direction={"row"} justifyContent={"space-between"}>
+      <Stack
+        direction={"row"}
+        spacing={2}
+        justifyContent={"space-between"}
+        flexWrap="wrap"
+      >
+        <Stack
+          width="100%"
+          direction={"row"}
+          justifyContent={"space-between"}
+          flexWrap="wrap"
+          gap={1}
+        >
           <Paper
             sx={{
               paddingX: 1,
               paddingY: 0.5,
               background: "#ddf",
+              maxWidth: "70%",
+              minWidth: "150px",
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            <Typography fontWeight={700} color="#333">
+            <Typography
+              fontWeight={700}
+              color="#333"
+              sx={{
+                wordBreak: "break-word",
+                whiteSpace: "normal",
+                overflowWrap: "break-word",
+              }}
+            >
               {story.name}
             </Typography>
           </Paper>
 
-          <Typography>{story.storyNumber || "None"}</Typography>
+          <Typography sx={{ flexShrink: 0 }}>
+            {story.storyNumber || "None"}
+          </Typography>
         </Stack>
       </Stack>
       <Stack direction={"row"} spacing={1}>
@@ -220,8 +246,12 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
           </Button>
 
           <Stack direction={"row"} spacing={1}>
-            <Button variant="text" color="warning">
-              <Edit onClick={() => handleEdit(story)} />
+            <Button
+              variant="text"
+              color="warning"
+              onClick={() => handleEdit(story)}
+            >
+              <Edit />
             </Button>
             <Button
               variant="text"
@@ -238,7 +268,10 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
 }
 
 export function StoriesListForm() {
-  const { registerEndpointFor, signalRClient } = useSignalRContext();
+  const { registerEndpointFor, disconnectFromEndpointFor, signalRClient } =
+    useSignalRContext();
+
+  const navigate = useNavigate();
 
   const matchId = Number(useParams()?.matchId);
   const syncFetchStories = useMemo(() => listMatchStories(matchId), [matchId]);
@@ -255,14 +288,42 @@ export function StoriesListForm() {
       "UpdateStoriesOfMatchWith",
       (serverStories) => setStories(serverStories as Story[]),
     );
+
+    registerEndpointFor(signalRClient, "MatchClosed", () => {
+      navigate("/dashboard");
+    });
+
+    return () => {
+      disconnectFromEndpointFor(signalRClient, "UpdateStoriesOfMatchWith");
+      disconnectFromEndpointFor(signalRClient, "MatchClosed");
+    };
   });
 
   const [stories, setStories] = useState<Story[]>([]);
+
+  // Use a ref to measure actual story heights
+  const storyRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [storyHeights, setStoryHeights] = useState<Record<string, number>>({});
+
+  // Calculate positions based on actual measured heights
+  const getStoryPosition = useCallback(
+    (index: number) => {
+      let position = 0;
+      for (let i = 0; i < index; i++) {
+        const storyId = stories[i]?.storyId;
+        position += storyHeights[storyId] || 116; // Default height + spacing
+      }
+      return position;
+    },
+    [stories, storyHeights],
+  );
+
+  // Update transitions to use dynamic heights
   const transitions = useTransition(
     stories.map((story, index) => ({
       ...story,
       key: story.storyId,
-      y: index * (100 + 16), // height of item + spacing
+      y: getStoryPosition(index),
     })),
     {
       from: { opacity: 0, y: -20 },
@@ -274,9 +335,19 @@ export function StoriesListForm() {
     },
   );
 
-  const moveStory = useCallback((dragIndex: number, hoverIndex: number) => {
-    console.log({ dragIndex, hoverIndex });
+  // Measure story heights after render
+  useEffect(() => {
+    const newHeights: Record<string, number> = {};
+    stories.forEach((story) => {
+      const element = storyRefs.current[story.storyId];
+      if (element) {
+        newHeights[story.storyId] = element.offsetHeight + 16; // height + spacing
+      }
+    });
+    setStoryHeights(newHeights);
+  }, [stories]);
 
+  const moveStory = useCallback((dragIndex: number, hoverIndex: number) => {
     setStories((prevStories) => {
       const newStories = [...prevStories];
       // Remove the dragged item
@@ -314,7 +385,7 @@ export function StoriesListForm() {
 
   const { hasDetectedChanges, haveAppliedCallback } = useListSettleDetector(
     stories,
-    1500,
+    1000,
     (stories) => {
       saveStoriesOrder(stories);
     },
@@ -324,20 +395,47 @@ export function StoriesListForm() {
     saveStoriesOrder(stories);
   };
 
+  // Calculate total height of all stories for container sizing
+  const totalListHeight = useMemo(() => {
+    let height = 0;
+    stories.forEach((story) => {
+      height += storyHeights[story.storyId] || 116; // Default height + spacing
+    });
+    return height || 100; // Minimum height
+  }, [stories, storyHeights]);
+
+  const closeMatch = () => {
+    finishMatch(matchId)
+      .then(() => showSuccess("Match is being finished"))
+      .catch(() => showError("Match has been Finished"));
+  };
+
   return (
     <>
       <AppCard
         sx={{
           borderTopRightRadius: 12,
           borderBottomRightRadius: 12,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
       >
-        <StoriesContainer spacing={2}>
+        <StoriesContainer
+          spacing={2}
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <Tooltip title="Click to update now">
             <Button
               variant="outlined"
               disabled={!hasDetectedChanges}
               onClick={forceUpdateStories}
+              fullWidth
+              sx={{ alignSelf: "flex-start" }}
             >
               <Stack direction="row" alignItems={"center"} spacing={1}>
                 <Typography>
@@ -349,18 +447,28 @@ export function StoriesListForm() {
               </Stack>
             </Button>
           </Tooltip>
+
           <Stack
             spacing={2}
-            overflow={"scroll"}
-            height={"calc(100vh - 200px)"}
-            flexGrow={0}
+            sx={{
+              overflow: "auto", // Changed from "scroll" to "auto"
+              height: {
+                xs: "calc(100vh - 250px)", // More space on small screens
+                sm: "calc(100vh - 220px)",
+                md: "calc(100vh - 200px)",
+              },
+              flexGrow: 1,
+              position: "relative",
+              width: "100%",
+            }}
           >
             <DndProvider backend={HTML5Backend}>
               <div
                 style={{
                   position: "relative",
                   width: "100%",
-                  height: stories.length * (100 + 16),
+                  height: totalListHeight,
+                  minHeight: "100%",
                 }}
               >
                 {transitions((style, story) => (
@@ -371,6 +479,10 @@ export function StoriesListForm() {
                       left: 0,
                       right: 0,
                       width: "100%",
+                    }}
+                    ref={(el) => {
+                      // Store ref to measure height
+                      storyRefs.current[story.storyId] = el;
                     }}
                   >
                     <StoryCard
@@ -385,9 +497,27 @@ export function StoriesListForm() {
             </DndProvider>
           </Stack>
         </StoriesContainer>
-        <StoryActions>
-          <Button variant="contained" onClick={() => open(null)}>
+
+        <StoryActions sx={{ flexShrink: 0 }}>
+          <Button
+            variant="contained"
+            onClick={() => open(null)}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
             Create Story
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="error"
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+            }}
+            onClick={closeMatch}
+          >
+            End Match
           </Button>
         </StoryActions>
       </AppCard>

@@ -1,6 +1,7 @@
 using Domain.Abstractions;
 using Domain.Abstractions.Auth.Models;
 using Domain.Abstractions.DataAccess;
+using Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Ports.SignalR;
@@ -14,24 +15,19 @@ public class JoinMatchCommandHandler
     private readonly ICurrentAccount _currentAccount;
     private readonly IHubContext<MatchHub> _matchHubContext;
     private readonly ListParticipantsQueryHandler _listParticipantsQueryHandler;
+    private readonly INotificationService _notificationService;
 
-    public JoinMatchCommandHandler(IApplicationDbContext dbContext, ICurrentAccount currentAccount, IHubContext<MatchHub> matchHubContext, ListParticipantsQueryHandler listParticipantsQueryHandler)
+    public JoinMatchCommandHandler(IApplicationDbContext dbContext, ICurrentAccount currentAccount, IHubContext<MatchHub> matchHubContext, ListParticipantsQueryHandler listParticipantsQueryHandler, INotificationService notificationService)
     {
         _dbContext = dbContext;
         _currentAccount = currentAccount;
         _matchHubContext = matchHubContext;
         _listParticipantsQueryHandler = listParticipantsQueryHandler;
+        _notificationService = notificationService;
     }
 
     public async Task<JoinMatchCommandResponse?> Handle(JoinMatchCommand request, CancellationToken cancellationToken)
     {
-        /* Rascunho dos passos a serem implementados
-         *
-         * 1. Puxar a partida e o participante, se a partida existir e o participante não
-         *      1.1. -> Chamar uma chamada para o grupo da partida validar permitir o acesso (Criar outro endpoint para adicionar o usuário na partida(Passar o id e a connection id do usuário)
-         *      1.2. Caso o usuário existir  -> Aprovar entrada no sistema sem perguntar (adicionar a connection id a o grupo de usuários da partida)
-         */
-        
         var match = await _dbContext.Matches.Include(m => m.Participants.Where(p => p.AccountId == _currentAccount.AccountId))
                                             .FirstOrDefaultAsync(m => m.MatchId == request.MatchId, cancellationToken);
 
@@ -46,8 +42,15 @@ public class JoinMatchCommandHandler
 
         if (participant is null)
         {
-            await _matchHubContext.Clients.Group(match.MatchId.ToString())
-                .SendAsync("AskAdminForApprovalForMatchAsync", request.ConnectionId, _currentAccount.AccountId);
+            // Temporally create an auto join for player (Just to send to my teacher cause i don't have time to implement a better alternative for now...)
+            
+            var role = await _dbContext.Roles.FirstAsync(r => r.RoleId == 15, CancellationToken.None);
+            participant = new Participant(_currentAccount, role);
+            participant.Join(match, _notificationService);
+
+            await _dbContext.SaveChangesAsync(CancellationToken.None);
+            
+            await Handle(request, cancellationToken);
 
             return new JoinMatchCommandResponse();
         }

@@ -19,7 +19,6 @@ export function PartyParticipantsViewer() {
   const { participants, allocateParticipants, voteOrReplace } =
     useParticipants();
   const { currentShowingStory } = useMatch();
-  const { accountId } = useAuth();
   const { showError, showInfo } = useSnackbar();
 
   useEffect(() => {
@@ -27,24 +26,23 @@ export function PartyParticipantsViewer() {
       signalRClient,
       "CurrentListOfParticipantsIs",
       (participants) => {
-        console.log({ signalRParticipants: participants });
         showInfo("A new participant has join the party");
         allocateParticipants(participants as Participant[]);
       },
     );
 
-    registerEndpointFor(
-      signalRClient,
-      "ParticipantVoteForStoryIs",
-      (votePoints) => {
-        console.log({ SeeTheVotes: votePoints });
-        voteOrReplace(
-          currentShowingStory!.storyId,
-          votePoints as number,
-          accountId,
-        );
-      },
-    );
+    registerEndpointFor(signalRClient, "ParticipantVoteForStoryIs", (vote) => {
+      const voteObj = vote as {
+        storyId: number;
+        points: number;
+        accountId: number;
+      };
+      voteOrReplace(
+        voteObj.storyId as number,
+        voteObj.points as number,
+        voteObj.accountId as number,
+      );
+    });
 
     listParticipantsForMatch(matchId)
       .then(allocateParticipants)
@@ -54,48 +52,96 @@ export function PartyParticipantsViewer() {
 
     return () => {
       disconnectFromEndpointFor(signalRClient, "CurrentListOfParticipantsIs");
+      disconnectFromEndpointFor(signalRClient, "ParticipantVoteForStoryIs");
     };
   }, [matchId]);
 
   const hasVoted = (participant: Participant) => {
-    console.log({ hasVOted: participant.votes });
-    return participant.votes.some(
-      (v) => v.storyId == currentShowingStory?.storyId,
+    const hasVoted = participant.votes.some(
+      (v) => v.storyId == currentShowingStory?.storyId && v.hasVotedAlready,
     );
+    return hasVoted;
   };
 
   return (
-    <AppCard sx={{ paddingX: 4, paddingY: 2 }}>
-      <Typography> Participants </Typography>
-      <Stack direction="row">
+    <AppCard sx={{ paddingX: { xs: 2, sm: 4 }, paddingY: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        {" "}
+        Participants{" "}
+      </Typography>
+      <Stack
+        direction="row"
+        flexWrap="wrap"
+        gap={2}
+        justifyContent={{ xs: "center", sm: "flex-start" }}
+        sx={{ width: "100%" }}
+      >
         {participants.map((participant) => (
-          <Card key={participant.accountId} sx={{ paddingX: 1, paddingY: 2 }}>
-            <Stack direction="row" spacing={2}>
-              <Avatar>{participant.participantName[0]}</Avatar>
-              <Stack spacing={1}>
-                <Typography> {participant.participantName}</Typography>
-                <Box alignItems={"center"}>
-                  {" "}
+          <Card
+            key={participant.accountId}
+            sx={{
+              paddingX: 1.5,
+              paddingY: 1.5,
+              minWidth: "240px",
+              maxWidth: { xs: "100%", sm: "300px" },
+              flexGrow: { xs: 1, sm: 0 },
+              flexShrink: 0,
+              flexBasis: { xs: "100%", sm: "auto" },
+            }}
+            elevation={1}
+          >
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Avatar sx={{ width: 40, height: 40 }}>
+                {participant.participantName[0]}
+              </Avatar>
+              <Stack spacing={0.5} sx={{ overflow: "hidden", width: "100%" }}>
+                <Typography
+                  noWrap
+                  title={participant.participantName}
+                  sx={{ fontWeight: "medium" }}
+                >
+                  {participant.participantName}
+                </Typography>
+                <Box>
                   {hasVoted(participant) ? (
-                    <Typography
-                      sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
                     >
-                      Voted as{" "}
-                      {
-                        participant.votes.find(
-                          (v) => v.storyId == currentShowingStory?.storyId,
-                        )?.points
-                      }
-                      <LocalFireDepartment />
-                    </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Voted as
+                      </Typography>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      >
+                        <Typography variant="body2" fontWeight="bold">
+                          {
+                            participant.votes.find(
+                              (v) => v.storyId == currentShowingStory?.storyId,
+                            )?.points
+                          }
+                        </Typography>
+                        <LocalFireDepartment fontSize="small" color="error" />
+                      </Box>
+                    </Box>
                   ) : (
-                    <Typography
-                      sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
                     >
-                      {" "}
-                      Waiting Vote
-                      <Timer />
-                    </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Waiting to Vote
+                      </Typography>
+                      <Timer fontSize="small" color="action" />
+                    </Box>
                   )}
                 </Box>
               </Stack>

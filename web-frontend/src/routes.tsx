@@ -30,7 +30,7 @@ export const routes = createBrowserRouter([
         children: [
           {
             path: "",
-            Component: LandingPage,
+            Component: SignInPage,
           },
           {
             path: "sign-in",

@@ -26,7 +26,6 @@ export function useListSettleDetector<T>(
 
     if (lastItemsStringRef.current.length === 0) {
       lastItemsStringRef.current = itemsString;
-      return;
     }
 
     // Only proceed if the content actually changed

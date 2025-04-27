@@ -22,18 +22,13 @@ export function JoinMatchPage() {
     useSignalRContext();
 
   useEffect(() => {
-    console.log("Registering ApproveJoinRequest handler...");
     registerEndpointFor(
       signalRClient,
       SignalRMatchHubClientEndpoints.ApproveJoinRequest,
       () => {
-        console.log("ApproveJoinRequest received!");
         navigate(`/dashboard/matches/party/${matchId}`);
       },
     ).then(() => {
-      console.log(
-        "ApproveJoinRequest handler registered, invoking JoinMatch...",
-      );
       invokeAsyncFor(
         signalRClient,
         SignalRMatchHubServerEndpoints.JoinMatch,

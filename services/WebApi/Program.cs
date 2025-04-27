@@ -8,6 +8,15 @@ using WebApi.Ports.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsProduction())
+{
+    // Clear default configuration sources
+    builder.Configuration.Sources.Clear();
+
+// Add environment variables as the only configuration source
+    builder.Configuration.AddEnvironmentVariables();
+}
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -25,7 +34,14 @@ builder.Services.InjectUseCases();
 
 FirebaseApp.Create(new AppOptions
 {
-    Credential = GoogleCredential.FromFile(builder.Configuration.GetValue<string>("Firebase:CredentialPath"))
+    Credential = builder.Configuration.GetValue<string>("Firebase:UseJson") == "True"
+                 ? GoogleCredential.FromFile(builder.Configuration.GetValue<string>("Firebase:CredentialPath"))
+                 : GoogleCredential.FromJson(builder.Configuration.GetValue<string>("Firebase:CredentialJson"))
+});
+
+builder.Services.AddHttpClient<HttpClient>(cfg =>
+{
+    cfg.Timeout = TimeSpan.FromMinutes(5);
 });
 
 builder.Services.AddAuthentication()
@@ -49,6 +65,12 @@ builder.Services.AddAuthentication()
             }
         };
     });
+
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddLogging(logging =>
+{
+    logging.AddApplicationInsights();
+});
 
 builder.Services.InjectDbContext(builder.Configuration);
 

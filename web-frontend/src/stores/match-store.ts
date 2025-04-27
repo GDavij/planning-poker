@@ -8,5 +8,7 @@ interface MatchActions {
 
 export const useMatch = create<MatchActions>((set) => ({
   currentShowingStory: null,
-  showStory: (story: Story) => set({ currentShowingStory: story }),
+  showStory: (story: Story | null) => {
+    set({ currentShowingStory: story });
+  },
 }));

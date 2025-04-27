@@ -14,7 +14,7 @@ export function useSignalR(hubName: string) {
         withCredentials: true,
       })
       .configureLogging(LogLevel.Information)
-      .withAutomaticReconnect()
+      .withAutomaticReconnect([1, 2, 3, 4, 5])
       .build();
 
   const registerEndpointFor = async (

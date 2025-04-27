@@ -19,9 +19,11 @@ public class StoryPoint : IParticipantResource
     private StoryPoint()
     { }
 
-    public StoryPoint(Story story, short points)
+    public StoryPoint(Story story, short points, Participant participant)
     {
-        Story = story;
+        StoryId = story.StoryId;
         Points = points;
+        AccountId = participant.AccountId;
+        MatchId = story.MatchId;
     }
 }

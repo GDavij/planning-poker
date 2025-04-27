@@ -1,6 +1,7 @@
 using Domain.Abstractions;
 using Domain.Abstractions.Auth.Models;
 using Domain.Abstractions.DataAccess;
+using Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Ports.SignalR;
@@ -29,6 +30,7 @@ public class VoteStoryCommandHandler
                                             .Include(m => m.Participants)
                                             .FirstAsync(m => m.MatchId == matchId);
 
+        var trackedEntity = _dbContext.ChangeTracker.Entries<StoryPoint>();
         var story = match.GetStoryWithId(storyId);
         if (story is null)
         {
@@ -44,8 +46,10 @@ public class VoteStoryCommandHandler
         }
         else
         {
-            story.Vote(points);
+            story.Vote(points, participant);
         }
+
+
             
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 
@@ -64,6 +68,12 @@ public class VoteStoryCommandHandler
                              .SendAsync("AllParticipantsVotedForStoryWithId", story.StoryId);
         };
 
-        await _hubContext.Clients.Group(match.MatchId.ToString()).SendAsync("SomeoneVoted", participant.AccountId);
+
+        await _hubContext.Clients.Group(match.MatchId.ToString()).SendAsync("SomeoneVoted", new
+        {
+            AccountId = _currentAccount.AccountId,
+            StoryId = story.StoryId,
+            Complexity = points
+        });
     }
 }

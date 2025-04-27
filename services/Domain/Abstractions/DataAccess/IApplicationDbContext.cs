@@ -1,5 +1,6 @@
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Domain.Abstractions.DataAccess;
 
@@ -12,5 +13,6 @@ public interface IApplicationDbContext
     DbSet<Story> Stories { get; init; }
     DbSet<StoryPoint> StoryPoints { get; init; }
     
+    ChangeTracker ChangeTracker { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
