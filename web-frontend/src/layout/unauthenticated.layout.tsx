@@ -39,20 +39,35 @@ const settings: Reference[] = [
 export function UnauthenticatedLayout() {
   return (
     <>
-      <AppBar position="static" sx={{ height: 60 }}>
+      <AppBar position="static" sx={{ backgroundColor: "#1976d2", height: 60 }}>
         <Container maxWidth="xl">
-          <Toolbar disableGutters></Toolbar>
+          <Toolbar disableGutters>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{
+                flexGrow: 1,
+                fontWeight: "bold",
+                color: "white",
+                textDecoration: "none",
+              }}
+            >
+              Planning Poker
+            </Typography>
+          </Toolbar>
         </Container>
       </AppBar>
 
-      <Outlet />
-
-      <a
-        href="https://www.flaticon.com/free-icons/story-points"
-        title="story points icons"
+      <Box
+        sx={{
+          padding: "32px",
+          margin: "16px auto",
+          maxWidth: "1200px",
+        }}
       >
-        Story points icons created by Alla Afanasenko - Flaticon
-      </a>
+        <Outlet />
+      </Box>
     </>
   );
 }
