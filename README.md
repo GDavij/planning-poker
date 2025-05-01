@@ -42,3 +42,33 @@ This project incorporates the following technologies and concepts:
 - **React.js**
 - **Material-UI** (React.js Component Library)
 - **Layered Architecture** (Feature-Based Organization)
+
+## Screenshots
+
+### Web
+
+#### Dashboard
+![Dashboard](./docs/assets/web/dashboard.png)
+
+#### Create Match
+![Create Match](./docs/assets/web/create-match.png)
+
+#### Edit Story Modal
+![Edit Story Modal](./docs/assets/web/edit-story-modal.png)
+
+#### Sign-In Page
+![Sign-In Page](./docs/assets/web/sign-in.png)
+
+### Mobile
+
+#### Complexity Selector
+![Complexity Selector](./docs/assets/mobile/complexity-selector.jpg)
+
+#### Join Match Page
+![Join Match Page](./docs/assets/mobile/join-match-page.jpg)
+
+#### Vote Screen
+![Vote Screen](./docs/assets/mobile/vote-screen.jpg)
+
+#### Empty Vote Screen
+![Empty Vote Screen](./docs/assets/mobile/empty-vote-screen.jpg)
