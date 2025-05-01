@@ -46,17 +46,29 @@ export function JoinMatchPage() {
     });
   }, []);
   return (
-    <Container>
-      <Box
-        sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-      >
-        <Stack spacing={2} direction="row">
-          <CircularProgress />
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Typography variant="h4"> Joining...</Typography>
-          </Box>
-        </Stack>
-      </Box>
-    </Container>
+    <Box
+      sx={{
+        padding: "32px",
+        margin: "16px auto",
+        maxWidth: "1200px",
+      }}
+    >
+      <Container>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Stack spacing={2} direction="row">
+            <CircularProgress />
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Typography variant="h4"> Joining...</Typography>
+            </Box>
+          </Stack>
+        </Box>
+      </Container>
+    </Box>
   );
 }
