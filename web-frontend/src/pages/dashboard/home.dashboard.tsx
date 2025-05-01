@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { listUserCreatedMatches } from "../../services/match.service";
 import { ListMatchesQueryResponse } from "../../models/matches";
 import { useNavigate } from "react-router";
+import { useJoinMatchModal } from "../../forms/stories/join-match.modal.form";
 
 export function HomeDashboard() {
   const [abortController] = useState(new AbortController());
@@ -20,6 +21,8 @@ export function HomeDashboard() {
 
   const [isLoadingCreatedMatches, setIsLoadingCreatedMatches] = useState(false);
 
+  const { open: openJoinModal } = useJoinMatchModal();
+
   const [userCreatedMatches, setUserCreatedMatches] = useState<
     ListMatchesQueryResponse[]
   >([]);
@@ -27,7 +30,7 @@ export function HomeDashboard() {
   const loadTop10CreatedMatches = () => {
     setIsLoadingCreatedMatches(true);
 
-    listUserCreatedMatches(1, 3, abortController)
+    listUserCreatedMatches(1, 50, abortController)
       .then((res) => setUserCreatedMatches(res.data))
       .catch(() => {})
       .finally(() => setIsLoadingCreatedMatches(false));
@@ -71,7 +74,7 @@ export function HomeDashboard() {
             <Typography variant="h4">Matches</Typography>
 
             <Stack direction="row" spacing={2}>
-              <Button variant="outlined" onClick={() => {}}>
+              <Button variant="outlined" onClick={() => openJoinModal(null)}>
                 {" "}
                 Join a Match
               </Button>
@@ -85,7 +88,7 @@ export function HomeDashboard() {
 
           <Box>
             <Divider textAlign="center">
-              <Typography variant="h6">Created Matches</Typography>
+              <Typography variant="h6">Active matches</Typography>
             </Divider>
 
             <Stack spacing={2}>
@@ -138,15 +141,7 @@ export function HomeDashboard() {
                       </Box>
                     </Card>
                   ))}
-
-              <Button fullWidth> See all Matches </Button>
             </Stack>
-          </Box>
-
-          <Box>
-            <Divider textAlign="center">
-              <Typography variant="h6">Joined Matches</Typography>
-            </Divider>
           </Box>
         </Card>
       </Container>

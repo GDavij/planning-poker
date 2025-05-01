@@ -1,42 +1,44 @@
 # Sprint Poker
 
-This project aims to support enterprises that wanna to self-host application to manage their planning by free just requiring a infra and a Identity Provider (AD, OAuth, etc...).
+Sprint Poker is a self-hosted application designed to help enterprises manage their planning processes for free. It requires only infrastructure and an Identity Provider (e.g., Active Directory, OAuth).
 
-## Inspiration \(WHY\)
+## Inspiration (Why)
 
-In my work we have every sprint the cerimony of planning to define new features to agregate bussiness value and the team is considerabily huge, the application we currently use does not support more than 6 people limiting the number of people that are able to contribute with points and points of view for every task, story, epic.
+In my workplace, we hold a planning ceremony every sprint to define new features that add business value. However, our current application limits participation to a maximum of six people, restricting the number of contributors who can provide points and perspectives for tasks, stories, and epics.
 
-I hope that this application solves the problem of limit of users during a sprint planning cerimony or other Scrum cerimony which consists to give points and points of view.
+This application aims to solve the problem of user limits during sprint planning or other Scrum ceremonies, enabling larger teams to collaborate effectively by contributing points and viewpoints.
 
-## Discover about the project \(Documentation\)
+## Project Documentation
 
 ### Database
 
-For database this webapp was used to model the data [https://erd-editor.io/](https://erd-editor.io/)
+The database for this web application was modeled using [ERD Editor](https://erd-editor.io/).
 
-- ERD
-  - [V1](./docs/erd/v1.json)
+- **Entity Relationship Diagram (ERD):**
+  - [Version 1](./docs/erd/v1.json)
 
-**Current Version**  
-![v1](./docs/erd/builds/v1.erd.png)
+**Current Version:**  
+![Version 1](./docs/erd/builds/v1.erd.png)
 
 ### Use Cases
 
-Not Defined Yet.
+Not defined yet.
 
-## What you can learn from this \(Techinical Knowledge\)
+## Technical Knowledge You Can Learn
 
-- `C# Programming Language`
+This project incorporates the following technologies and concepts:
 
-  - `OAuth Firebase Integration`
-  - `ASPNET CORE`
-  - `SignalR (Real Time Communication Library)`
-  - `CQRS (Command Query Responsability Segregation)`
-  - `Notification Pattern(Instead of Domain Exceptions)`
-  - `Layered Architecture (Feature Based Organization)`
+### Backend (`C#`)
 
+- **OAuth Firebase Integration**
+- **ASP.NET Core**
+- **SignalR** (Real-Time Communication Library)
+- **CQRS** (Command Query Responsibility Segregation)
+- **Notification Pattern** (Replaces Domain Exceptions)
+- **Layered Architecture** (Feature-Based Organization)
 
-- `Typescript`
-  - `React JS`
-  - `ReactJS Material UI`
-  - `Layered Architecture(Feature Based Organization)`
+### Frontend (`TypeScript`)
+
+- **React.js**
+- **Material-UI** (React.js Component Library)
+- **Layered Architecture** (Feature-Based Organization)

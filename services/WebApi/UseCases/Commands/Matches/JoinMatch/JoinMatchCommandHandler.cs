@@ -57,7 +57,7 @@ public class JoinMatchCommandHandler
 
 
         participant.ConnectedAt(request.ConnectionId);
-        await _matchHubContext.Groups.AddToGroupAsync(request.ConnectionId, match.MatchId.ToString());
+        await _matchHubContext.Groups.AddToGroupAsync(request.ConnectionId, match.MatchId.ToString(), CancellationToken.None);
         
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 

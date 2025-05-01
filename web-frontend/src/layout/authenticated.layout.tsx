@@ -3,6 +3,7 @@ import { CreateStoryFormModal } from "../forms/stories/create-story.modal.form";
 import { useEffect } from "react";
 import { useAuth } from "../stores/auth-store";
 import { getCurrentAccount } from "../services/auth.service";
+import { JoinMatchModal } from "../forms/stories/join-match.modal.form";
 
 export function AuthenticatedLayout() {
   const { setAccountIdAs } = useAuth();
@@ -20,6 +21,7 @@ export function AuthenticatedLayout() {
     <>
       <Outlet />
       <CreateStoryFormModal />
+      <JoinMatchModal />
     </>
   );
 }

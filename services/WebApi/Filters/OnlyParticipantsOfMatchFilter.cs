@@ -20,8 +20,9 @@ public class OnlyParticipantsOfMatchFilter : Attribute, IAsyncActionFilter
         var matchIdString = context.RouteData.Values["matchId"]?.ToString();
 
         if (long.TryParse(matchIdString, out long matchId) &&
-            await dbContext.Matches.AnyAsync(m => m.MatchId == matchId &&
-                                                        m.AccountId == currentAccount.AccountId))
+            await dbContext.Matches.Include(m => m.Participants)
+                                    .AnyAsync(m => m.MatchId == matchId &&
+                                                         m.Participants.Any(p => p.AccountId == currentAccount.AccountId)))
         {
             await next();
             return;

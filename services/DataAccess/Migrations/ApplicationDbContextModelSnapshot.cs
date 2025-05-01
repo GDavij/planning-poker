@@ -233,6 +233,12 @@ namespace DataAccess.Migrations
                             RoleId = (byte)14,
                             Abbreviation = "DBA",
                             Name = "Database Administrator"
+                        },
+                        new
+                        {
+                            RoleId = (byte)15,
+                            Abbreviation = "NONE",
+                            Name = "Generic Participant"
                         });
                 });
 

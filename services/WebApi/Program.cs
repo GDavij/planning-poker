@@ -35,8 +35,8 @@ builder.Services.InjectUseCases();
 FirebaseApp.Create(new AppOptions
 {
     Credential = builder.Configuration.GetValue<string>("Firebase:UseJson") == "True"
-                 ? GoogleCredential.FromFile(builder.Configuration.GetValue<string>("Firebase:CredentialPath"))
-                 : GoogleCredential.FromJson(builder.Configuration.GetValue<string>("Firebase:CredentialJson"))
+                 ? GoogleCredential.FromJson(builder.Configuration.GetValue<string>("Firebase:CredentialJson"))
+                 : GoogleCredential.FromFile(builder.Configuration.GetValue<string>("Firebase:CredentialPath"))
 });
 
 builder.Services.AddHttpClient<HttpClient>(cfg =>
@@ -95,7 +95,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors();
 
 app.UseAuthentication();

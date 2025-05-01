@@ -22,6 +22,6 @@ internal class RoleSeeder : ISeeder<Role>
             new Role(12, "Solutions Architect", "SA"),
             new Role(13, "Software Engineer", "SE"),
             new Role(14, "Database Administrator", "DBA"),
-            new Role(15, "Generic Participant", "Participant"));
+            new Role(15, "Generic Participant", "NONE"));
     }
 }

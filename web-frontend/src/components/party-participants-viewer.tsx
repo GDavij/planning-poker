@@ -22,38 +22,46 @@ export function PartyParticipantsViewer() {
   const { showError, showInfo } = useSnackbar();
 
   useEffect(() => {
-    registerEndpointFor(
+    disconnectFromEndpointFor(
       signalRClient,
       "CurrentListOfParticipantsIs",
-      (participants) => {
-        showInfo("A new participant has join the party");
-        allocateParticipants(participants as Participant[]);
-      },
-    );
-
-    registerEndpointFor(signalRClient, "ParticipantVoteForStoryIs", (vote) => {
-      const voteObj = vote as {
-        storyId: number;
-        points: number;
-        accountId: number;
-      };
-      voteOrReplace(
-        voteObj.storyId as number,
-        voteObj.points as number,
-        voteObj.accountId as number,
+    ).then(() => {
+      registerEndpointFor(
+        signalRClient,
+        "CurrentListOfParticipantsIs",
+        (participants) => {
+          showInfo("A new participant has join the party");
+          allocateParticipants(participants as Participant[]);
+        },
       );
     });
+
+    disconnectFromEndpointFor(signalRClient, "ParticipantVoteForStoryIs").then(
+      () => {
+        registerEndpointFor(
+          signalRClient,
+          "ParticipantVoteForStoryIs",
+          (vote) => {
+            const voteObj = vote as {
+              storyId: number;
+              points: number;
+              accountId: number;
+            };
+            voteOrReplace(
+              voteObj.storyId as number,
+              voteObj.points as number,
+              voteObj.accountId as number,
+            );
+          },
+        );
+      },
+    );
 
     listParticipantsForMatch(matchId)
       .then(allocateParticipants)
       .catch(() => {
         showError("Could not load party participants");
       });
-
-    return () => {
-      disconnectFromEndpointFor(signalRClient, "CurrentListOfParticipantsIs");
-      disconnectFromEndpointFor(signalRClient, "ParticipantVoteForStoryIs");
-    };
   }, [matchId]);
 
   const hasVoted = (participant: Participant) => {

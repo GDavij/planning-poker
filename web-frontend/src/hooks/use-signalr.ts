@@ -22,12 +22,6 @@ export function useSignalR(hubName: string) {
     endpointName: string,
     handler: (...args: unknown[]) => Promise<void> | void,
   ) => {
-    const cannotInvokeHubSinceItIsNotConnected = () =>
-      signalRClient.state !== HubConnectionState.Connected;
-
-    // Block SignalR Hub call till handshake
-    await suspendAsyncWhile(cannotInvokeHubSinceItIsNotConnected);
-
     signalRClient.on(endpointName, handler);
   };
 

@@ -18,22 +18,31 @@ export function JoinMatchPage() {
 
   const navigate = useNavigate();
 
-  const { invokeAsyncFor, registerEndpointFor, signalRClient } =
-    useSignalRContext();
+  const {
+    invokeAsyncFor,
+    registerEndpointFor,
+    disconnectFromEndpointFor,
+    signalRClient,
+  } = useSignalRContext();
 
   useEffect(() => {
-    registerEndpointFor(
+    disconnectFromEndpointFor(
       signalRClient,
       SignalRMatchHubClientEndpoints.ApproveJoinRequest,
-      () => {
-        navigate(`/dashboard/matches/party/${matchId}`);
-      },
     ).then(() => {
-      invokeAsyncFor(
+      registerEndpointFor(
         signalRClient,
-        SignalRMatchHubServerEndpoints.JoinMatch,
-        Number(matchId),
-      );
+        SignalRMatchHubClientEndpoints.ApproveJoinRequest,
+        () => {
+          navigate(`/dashboard/matches/party/${matchId}`);
+        },
+      ).then(() => {
+        invokeAsyncFor(
+          signalRClient,
+          SignalRMatchHubServerEndpoints.JoinMatch,
+          Number(matchId),
+        );
+      });
     });
   }, []);
   return (

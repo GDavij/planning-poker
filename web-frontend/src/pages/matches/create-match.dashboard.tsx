@@ -22,10 +22,6 @@ type CreateMatchFormData = {
 };
 
 export function CreateMatchPage() {
-  const { matchId } = useParams();
-
-  const shouldBeReadonly = () => !!matchId;
-
   const navigate = useNavigate();
 
   const [abortController] = useState(new AbortController());

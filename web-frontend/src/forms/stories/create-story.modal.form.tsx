@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { ModalHandlerState } from "../../models/form";
+import {
+  EditStoryModalStateHandler,
+  ModalHandlerState,
+} from "../../models/form";
 import { Box, Button, Card, Modal, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
@@ -8,12 +11,14 @@ import { Story } from "../../models/matches";
 import { useSnackbar } from "../../components/snackbar";
 import { useParams } from "react-router";
 
-export const useCreateStoryFormModal = create<ModalHandlerState>()((set) => ({
-  open: (story: Story | null = null) => set({ isOpen: true, story }),
-  close: () => set({ isOpen: false }),
-  isOpen: false,
-  story: null,
-}));
+export const useCreateStoryFormModal = create<EditStoryModalStateHandler>()(
+  (set) => ({
+    open: (story: Story | null = null) => set({ isOpen: true, story }),
+    close: () => set({ isOpen: false }),
+    isOpen: false,
+    story: null,
+  }),
+);
 
 interface CreateStoryForm {
   name: string;
@@ -36,7 +41,7 @@ export function CreateStoryFormModal() {
   } = useForm<CreateStoryForm>();
 
   useEffect(() => {
-    reset(story);
+    reset(story as CreateStoryForm);
     setIsSavingStory(false);
   }, [isOpen]);
 

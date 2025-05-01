@@ -1,6 +1,6 @@
 import { Stack, Typography } from "@mui/material";
 import { useSpring, animated } from "@react-spring/web";
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { AppCard } from "../../components/app-card";
 import { HighlightPaper } from "../../components/app-paper";
 import { useSnackbar } from "../../components/snackbar";
@@ -9,35 +9,37 @@ import { useDebounce } from "../../hooks/debounce";
 import { Story } from "../../models/matches";
 import { PartyParticipantsViewer } from "../../components/party-participants-viewer";
 import { useMatch } from "../../stores/match-store";
+import { listMatchStories } from "../../services/match.service";
+import { useParams } from "react-router";
 
-interface CurrentlyShowingStoryViewerProps {
-  stories: Story[];
-}
+export function CurrenlyShowingStoryViewer() {
+  const matchId = Number(useParams().matchId);
 
-export function CurrenlyShowingStoryViewer({
-  stories,
-}: CurrentlyShowingStoryViewerProps) {
   const { signalRClient, registerEndpointFor, disconnectFromEndpointFor } =
     useSignalRContext();
   const { showInfo } = useSnackbar();
 
-  const { showStory, currentShowingStory } = useMatch();
+  const { showStory, currentShowingStory, stories } = useMatch();
 
-  const handleSelectStory = (storyId: number) => {
-    const storyToAnalyze = stories.find((s) => s.storyId == storyId) || null;
+  const handleSelectStory = useCallback(
+    (storyId: number) => {
+      console.log({ stories, storyId });
+      const storyToAnalyze = stories.find((s) => s.storyId == storyId) || null;
 
-    showStory(storyToAnalyze);
-    api.start({
-      from: { transform: "translateX(-100%)" },
-      to: { transform: "translateX(0%)" },
-      reset: true,
-      config: { tension: 200, friction: 20 },
-    });
+      showStory(storyToAnalyze);
+      api.start({
+        from: { transform: "translateX(-100%)" },
+        to: { transform: "translateX(0%)" },
+        reset: true,
+        config: { tension: 200, friction: 20 },
+      });
 
-    if (storyToAnalyze !== null) {
-      showInfo(`Someone selected story "${storyToAnalyze.name}" to be voted`);
-    }
-  };
+      if (storyToAnalyze !== null) {
+        showInfo(`Someone selected story "${storyToAnalyze.name}" to be voted`);
+      }
+    },
+    [stories],
+  );
 
   const { debouncedFn } = useDebounce<number, (storyId: number) => void>(
     handleSelectStory,
@@ -66,6 +68,8 @@ export function CurrenlyShowingStoryViewer({
   }, [stories]);
 
   useEffect(() => {
+    showStory(null);
+
     api.start({
       from: { transform: "translateX(-100%)" },
       to: { transform: "translateX(0%)" },

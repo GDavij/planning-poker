@@ -73,41 +73,25 @@ export function PartyPage() {
   const { accountId } = useAuth();
   const { currentShowingStory } = useMatch();
 
-  const [stories, setStories] = useState<Story[]>([]);
-
+  // Bug with Closures, Stories not updating after creation for be shown to the user
   useEffect(() => {
-    listMatchStories(matchId).then((stories) => {
-      setStories(stories);
-    });
-
     invokeAsyncFor(
       signalRClient,
       SignalRMatchHubServerEndpoints.JoinMatch,
       Number(matchId),
     );
 
-    registerEndpointFor(
-      signalRClient,
-      "UpdateStoriesOfMatchWith",
-      (stories) => {
-        setStories(stories as Story[]);
-      },
-    );
+    disconnectFromEndpointFor(signalRClient, "SomeoneVoted").then(() => {
+      registerEndpointFor(signalRClient, "SomeoneVoted", (vote) => {
+        const voteObj = vote as {
+          storyId: number;
+          complexity: number;
+          accountId: number;
+        };
 
-    registerEndpointFor(signalRClient, "SomeoneVoted", (vote) => {
-      const voteObj = vote as {
-        storyId: number;
-        complexity: number;
-        accountId: number;
-      };
-
-      voteOrReplace(voteObj.storyId, voteObj.complexity, voteObj.accountId);
+        voteOrReplace(voteObj.storyId, voteObj.complexity, voteObj.accountId);
+      });
     });
-
-    return () => {
-      disconnectFromEndpointFor(signalRClient, "UpdateStoriesOfMatchWith");
-      disconnectFromEndpointFor(signalRClient, "SomeoneVoted");
-    };
   }, []);
 
   const hasVotedFor = (
@@ -127,14 +111,21 @@ export function PartyPage() {
     return hasVoted;
   };
 
+  const [isVotingComplexity, setIsVotingComplexity] = useState<number | null>(
+    null,
+  );
+
   const votePointsAs = (points: number) => {
+    setIsVotingComplexity(points);
+
     voteForStory(matchId, currentShowingStory!.storyId, points)
       .then(() => {
         showSuccess(`Voted Story with a complexity about ${points} points`);
       })
       .catch(() => {
         showError(`Could not vote story..., try again soon`);
-      });
+      })
+      .finally(() => setIsVotingComplexity(null));
   };
 
   return (
@@ -145,7 +136,7 @@ export function PartyPage() {
         </Grid2>
         <Grid2 size={9} sx={{ padding: 6 }}>
           <Stack spacing={4}>
-            <CurrenlyShowingStoryViewer stories={stories} />
+            <CurrenlyShowingStoryViewer />
             <Grid2>
               <Grid2
                 container
@@ -158,6 +149,8 @@ export function PartyPage() {
                     <Grid2 key={complexity.points} xs="auto">
                       <Button
                         sx={{ background: "#0000" }}
+                        disabled={isVotingComplexity !== null}
+                        loading={isVotingComplexity == complexity.points}
                         onClick={() => votePointsAs(complexity.points)}
                       >
                         <Card

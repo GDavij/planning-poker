@@ -27,6 +27,7 @@ import { useSnackbar } from "../../components/snackbar";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useConfirmation } from "../../components/confirmation-dialog";
 import { AppCard } from "../../components/app-card";
+import { useMatch } from "../../stores/match-store";
 
 const StoriesContainer = styled(Stack)(({ theme }) => ({
   borderRight: "2px solid #eef",
@@ -277,29 +278,36 @@ export function StoriesListForm() {
   const syncFetchStories = useMemo(() => listMatchStories(matchId), [matchId]);
   const { open } = useCreateStoryFormModal();
   const { showSuccess, showError } = useSnackbar();
+  const { confirm } = useConfirmation();
 
   useEffect(() => {
     syncFetchStories.then((stories) => setStories(stories));
   }, [syncFetchStories]);
 
   useEffect(() => {
-    registerEndpointFor(
-      signalRClient,
-      "UpdateStoriesOfMatchWith",
-      (serverStories) => setStories(serverStories as Story[]),
+    disconnectFromEndpointFor(signalRClient, "updatestoriesofmatchwith").then(
+      () => {
+        registerEndpointFor(
+          signalRClient,
+          "updatestoriesofmatchwith",
+          (serverStories) => {
+            setStories(serverStories as Story[]);
+          },
+        );
+      },
     );
 
     registerEndpointFor(signalRClient, "MatchClosed", () => {
       navigate("/dashboard");
     });
 
-    return () => {
-      disconnectFromEndpointFor(signalRClient, "UpdateStoriesOfMatchWith");
-      disconnectFromEndpointFor(signalRClient, "MatchClosed");
-    };
+    // return () => {
+    //   disconnectFromEndpointFor(signalRClient, "UpdateStoriesOfMatchWith");
+    //   disconnectFromEndpointFor(signalRClient, "MatchClosed");
+    // };
   });
 
-  const [stories, setStories] = useState<Story[]>([]);
+  const { stories, setStories, setStoriesFunc } = useMatch();
 
   // Use a ref to measure actual story heights
   const storyRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -348,7 +356,7 @@ export function StoriesListForm() {
   }, [stories]);
 
   const moveStory = useCallback((dragIndex: number, hoverIndex: number) => {
-    setStories((prevStories) => {
+    setStoriesFunc(stories, (prevStories) => {
       const newStories = [...prevStories];
       // Remove the dragged item
       const draggedItem = newStories.splice(dragIndex, 1)[0];
@@ -404,10 +412,21 @@ export function StoriesListForm() {
     return height || 100; // Minimum height
   }, [stories, storyHeights]);
 
-  const closeMatch = () => {
-    finishMatch(matchId)
-      .then(() => showSuccess("Match is being finished"))
-      .catch(() => showError("Match has been Finished"));
+  const returnToDash = () => {
+    navigate("/dashboard");
+  };
+
+  const closeMatch = async () => {
+    const shouldEndMatch = await confirm({
+      title: "Sure wanna end this planning?",
+      message: "This action cannot be undone",
+    });
+
+    if (shouldEndMatch) {
+      finishMatch(matchId)
+        .then(() => showSuccess("Match is being finished"))
+        .catch(() => showError("Match has been Finished"));
+    }
   };
 
   return (
@@ -429,6 +448,29 @@ export function StoriesListForm() {
             flexDirection: "column",
           }}
         >
+          <Stack spacing={2}>
+            <Button
+              variant="outlined"
+              color="error"
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={closeMatch}
+            >
+              End Match
+            </Button>
+
+            <Button
+              variant="outlined"
+              color="primary"
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+              }}
+              onClick={returnToDash}
+            >
+              Return to Dashboard
+            </Button>
+          </Stack>
           <Tooltip title="Click to update now">
             <Button
               variant="outlined"
@@ -453,9 +495,9 @@ export function StoriesListForm() {
             sx={{
               overflow: "auto", // Changed from "scroll" to "auto"
               height: {
-                xs: "calc(100vh - 250px)", // More space on small screens
-                sm: "calc(100vh - 220px)",
-                md: "calc(100vh - 200px)",
+                xs: "calc(100vh - 260px)", // More space on small screens
+                sm: "calc(100vh - 260px)",
+                md: "calc(100vh - 300px)",
               },
               flexGrow: 1,
               position: "relative",
@@ -507,17 +549,6 @@ export function StoriesListForm() {
             }}
           >
             Create Story
-          </Button>
-
-          <Button
-            variant="outlined"
-            color="error"
-            sx={{
-              width: { xs: "100%", sm: "auto" },
-            }}
-            onClick={closeMatch}
-          >
-            End Match
           </Button>
         </StoryActions>
       </AppCard>

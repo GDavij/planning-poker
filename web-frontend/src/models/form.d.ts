@@ -1,6 +1,11 @@
-export interface ModalHandlerState {
+import { Story } from "./matches";
+
+export interface ModalHandlerState<TArg> {
   isOpen: boolean;
-  story: Story | null;
-  open: (story: Story | null = null) => void;
+  open: (story: TArg | null = null) => void;
   close: () => void;
+}
+
+export interface EditStoryModalStateHandler extends ModalHandlerState<Story> {
+  story: Story | null;
 }

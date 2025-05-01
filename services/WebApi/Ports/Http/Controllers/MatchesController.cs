@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApi.Filters;
 using WebApi.UseCases.Commands.Matches.CloseMatch;
 using WebApi.UseCases.Commands.Matches.CreateMatch;
+using WebApi.UseCases.Commands.Matches.JoinMatch;
 using WebApi.UseCases.Commands.Stories.AddStory;
 using WebApi.UseCases.Commands.Stories.DeleteStory;
 using WebApi.UseCases.Commands.Stories.SelectStory;
