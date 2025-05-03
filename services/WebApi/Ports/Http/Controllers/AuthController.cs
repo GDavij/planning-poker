@@ -1,25 +1,30 @@
+using System.Net;
+using Application.UseCases.Management.Accounts.CreateAccount;
+using Application.UseCases.Management.Accounts.Me;
 using Domain.Abstractions;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.UseCases.Commands.Accounts.CreateAccount;
-using WebApi.UseCases.Queries.Accounts.Me;
 
 namespace WebApi.Ports.Http.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
-public class AuthController : ControllerBase
+public class AuthController : BaseApiController
 {
-    private readonly INotificationService _notificationService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(INotificationService notificationService, IConfiguration configuration, ILogger<AuthController> logger)
+    public AuthController(
+        INotificationService notificationService,
+        IConfiguration configuration,
+        ILogger<AuthController> logger,
+        IHttpContextAccessor httpContextAcessor,
+        TelemetryClient telemetryClient) : base(notificationService, httpContextAcessor, telemetryClient)
     {
-        _notificationService = notificationService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -60,12 +65,7 @@ public class AuthController : ControllerBase
     {
         var result = await handler.Handle(createAccountCommand, CancellationToken.None);
 
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Created("/accounts", result);
+        return RespondWith(result, HttpStatusCode.Created);
     }
 
     [HttpPost("autologin")]
@@ -85,12 +85,7 @@ public class AuthController : ControllerBase
 
             var result = await handler.Handle(createAccountCommand, CancellationToken.None);
 
-            if (_notificationService.HasNotifications())
-            {
-                return BadRequest(_notificationService.GetNotifications());
-            }
-
-            return Ok(result);
+            return RespondWith(result, HttpStatusCode.OK);
         }
         catch (Exception exception)
         {
@@ -102,7 +97,7 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMe(GetMeQueryHandler handler)
     {
-        return Ok(await handler.Handle());
+        return RespondWith(await handler.Handle(), HttpStatusCode.OK);
     }
 }
 public record TokenRequest(string OAuthToken);

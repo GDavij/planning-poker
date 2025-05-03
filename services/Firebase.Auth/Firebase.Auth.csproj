@@ -14,4 +14,13 @@
       <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="FirebaseAdmin">
+        <HintPath>..\..\..\..\.nuget\packages\firebaseadmin\3.1.0\lib\net6.0\FirebaseAdmin.dll</HintPath>
+      </Reference>
+      <Reference Include="Google.Apis.Auth">
+        <HintPath>..\..\..\..\.nuget\packages\google.apis.auth\1.68.0\lib\net6.0\Google.Apis.Auth.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

@@ -44,15 +44,19 @@ public class Story
         return StoryPoints.Any(p => p.AccountId == participant.AccountId && p.StoryId == StoryId);
     }
 
-    public void Revote(short points, Participant participant)
+    public StoryPoint Revote(short points, Participant participant)
     {
         var storyPoint = StoryPoints.First(p => p.AccountId == participant.AccountId);
         storyPoint.RevaliateComplexityTo(points);
+
+        return storyPoint;
     }
     
-    public void Vote(short points, Participant participant)
+    public StoryPoint Vote(short points, Participant participant)
     {
         var storyPoint = new StoryPoint(this, points, participant);
         StoryPoints.Add(storyPoint);
+
+        return storyPoint;
     }
 }

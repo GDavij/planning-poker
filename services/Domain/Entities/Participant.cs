@@ -1,3 +1,4 @@
+using System.Net;
 using System.Runtime.Serialization;
 using Domain.Abstractions;
 using Domain.Abstractions.Auth.Models;
@@ -28,7 +29,7 @@ public class Participant
     {
         if (Match is not null)
         {
-            notificationService.AddNotification($"Already Participanting on match {match.Description}", "participant.alreadyJoinedMatch");
+            notificationService.AddNotification($"Already Participanting on match {match.Description}", "participant.alreadyJoinedMatch", HttpStatusCode.Conflict);
             return false;
         }
 

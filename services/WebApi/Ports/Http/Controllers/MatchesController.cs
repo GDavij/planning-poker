@@ -1,56 +1,56 @@
+using System.Net;
+using Application.UseCases.Planning.Matches.CloseMatch;
+using Application.UseCases.Planning.Matches.CreateMatch;
+using Application.UseCases.Planning.Matches.ListMatches;
+using Application.UseCases.Planning.Matches.ListParticipants;
+using Application.UseCases.Planning.Matches.ListRoles;
+using Application.UseCases.Planning.Stories.AddStory;
+using Application.UseCases.Planning.Stories.DeleteStory;
+using Application.UseCases.Planning.Stories.ListStories;
+using Application.UseCases.Planning.Stories.SelectStory;
+using Application.UseCases.Planning.Stories.UpdateStory;
+using Application.UseCases.Planning.Stories.VoteStory;
+using AspNetCore.Security.Filters;
 using Domain.Abstractions;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Filters;
-using WebApi.UseCases.Commands.Matches.CloseMatch;
-using WebApi.UseCases.Commands.Matches.CreateMatch;
-using WebApi.UseCases.Commands.Matches.JoinMatch;
-using WebApi.UseCases.Commands.Stories.AddStory;
-using WebApi.UseCases.Commands.Stories.DeleteStory;
-using WebApi.UseCases.Commands.Stories.SelectStory;
-using WebApi.UseCases.Commands.Stories.UpdateStory;
-using WebApi.UseCases.Commands.Stories.VoteStory;
-using WebApi.UseCases.Queries.Matches.ListMatches;
-using WebApi.UseCases.Queries.Matches.ListParticipants;
-using WebApi.UseCases.Queries.Matches.ListRoles;
-using WebApi.UseCases.Queries.Stories;
-using WebApi.UseCases.Queries.Stories.ListStories;
 
 namespace WebApi.Ports.Http.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
-public class MatchesController : ControllerBase
+public class MatchesController : BaseApiController
 {
-    private readonly INotificationService _notificationService;
 
-    public MatchesController(INotificationService notificationService)
-    {
-        _notificationService = notificationService;
-    }
+    public MatchesController(
+        INotificationService notificationService,
+        IHttpContextAccessor httpContextAccessor,
+        TelemetryClient telemetryClient) 
+        : base(notificationService, httpContextAccessor, telemetryClient)
+    { }
 
     [HttpPost("start")]
     public async Task<IActionResult> StartNewMatch([FromBody] CreateMatchCommand command,
         [FromServices] CreateMatchCommandHandler handler)
     {
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command);
 
-        return Created("/matches", result);
+        return RespondWith(result, HttpStatusCode.Created);
     }
 
     [HttpGet]
     public async Task<IActionResult> ListUserCreatedMatches([FromQuery] ListMatchesQuery query,
         [FromServices] ListMatchesQueryHandler handler, CancellationToken cancellationToken)
     {
-        return Ok(await handler.Handle(query, cancellationToken));
+        return RespondWith(await handler.Handle(query, cancellationToken), HttpStatusCode.OK);
     }
 
     [HttpGet("roles")]
-    public async Task<IActionResult> ListValidRoles([FromQuery] ListRolesQuery query,
-        [FromServices] ListRolesQueryHandler handler, CancellationToken cancellationToken)
+    public async Task<IActionResult> ListValidRoles([FromServices] ListRolesQueryHandler handler, CancellationToken cancellationToken)
     {
-        return Ok(await handler.Handle(query, cancellationToken));
+        return RespondWith(await handler.Handle(cancellationToken), HttpStatusCode.OK);
     }
 
     [HttpGet("match/{matchId}/stories")]
@@ -62,12 +62,7 @@ public class MatchesController : ControllerBase
     {
         var result = await handler.Handle(matchId, cancellationToken);
 
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Ok(result);
+        return RespondWith(result, HttpStatusCode.OK);
     }
 
     [HttpGet("match/{matchId}/participants")]
@@ -78,12 +73,7 @@ public class MatchesController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.Handle(matchId, cancellationToken);
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Ok(result);
+        return RespondWith(result, HttpStatusCode.OK);
     }
 
     [HttpPost("match/{matchId}/story/add")]
@@ -93,13 +83,7 @@ public class MatchesController : ControllerBase
         [FromBody] AddStoryCommand command,
         [FromServices] AddStoryCommandHandler handler)
     {
-        await handler.Handle(matchId, command);
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-        
-        return Created();
+        return RespondWith(await handler.Handle(matchId, command), HttpStatusCode.Created);
     }
 
     [HttpPut("match/{matchId}/story/{storyId}/update")]
@@ -110,13 +94,7 @@ public class MatchesController : ControllerBase
         [FromBody] UpdateStoryCommand command,
         [FromServices] UpdateStoryCommandHandler handler)
     {
-        await handler.Handle(matchId, storyId, command);
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Accepted();
+        return RespondWith(await handler.Handle(matchId, storyId, command), HttpStatusCode.Accepted);
     }
 
     [HttpDelete("match/{matchId}/story/{storyId}")]
@@ -126,13 +104,8 @@ public class MatchesController : ControllerBase
         [FromRoute] long storyId,
         [FromServices] DeleteStoryCommandHandler handler)
     {
-        await handler.Handle(matchId, storyId);
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Accepted();
+        
+        return RespondWith(await handler.Handle(matchId, storyId), HttpStatusCode.Accepted);
     }
 
     [HttpPatch("match/{matchId}/story/{storyId}")]
@@ -142,13 +115,7 @@ public class MatchesController : ControllerBase
         [FromRoute] long storyId,
         [FromServices] SelectStoryCommandHandler handler)
     {
-        await handler.Handle(matchId, storyId);
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Ok();
+        return RespondWith(await handler.Handle(matchId, storyId), HttpStatusCode.Accepted);
     }
 
     [HttpPatch("match/{matchId}/story/{storyId}/vote/{points}")]
@@ -159,13 +126,7 @@ public class MatchesController : ControllerBase
         [FromRoute] short points,
         [FromServices] VoteStoryCommandHandler handler)
     {
-        await handler.Handle(matchId, storyId, points);
-        if (_notificationService.HasNotifications())
-        {
-            return BadRequest(_notificationService.GetNotifications());
-        }
-
-        return Accepted();
+        return RespondWith(await handler.Handle(matchId, storyId, points), HttpStatusCode.Accepted);
     }
 
     [HttpPatch("match/{matchId}/finish")]
@@ -174,12 +135,6 @@ public class MatchesController : ControllerBase
         [FromRoute] long matchId,
         [FromServices] CloseMatchCommandHandler handler)
     {
-        await handler.Handle(matchId);
-        if (_notificationService.HasNotifications())
-        {
-            return Conflict(_notificationService.GetNotifications());
-        }
-
-        return Accepted();
+        return RespondWith(await handler.Handle(matchId), HttpStatusCode.Accepted);
     }
 }

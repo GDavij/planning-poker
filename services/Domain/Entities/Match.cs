@@ -1,3 +1,4 @@
+using System.Net;
 using Domain.Abstractions;
 using Domain.Abstractions.Auth.Models;
 
@@ -36,7 +37,7 @@ public class Match : IAggregate
     {
         if (Stories.Any(s => s.StoryNumber == storyNumber && !string.IsNullOrWhiteSpace(s.StoryNumber)))
         {
-            notificationService.AddNotification("Story Number already registered.", "Story.DuplicatedNumber");
+            notificationService.AddNotification("Story Number already registered.", "Story.DuplicatedNumber", HttpStatusCode.Conflict);
         }
 
         if (notificationService.HasNotifications())

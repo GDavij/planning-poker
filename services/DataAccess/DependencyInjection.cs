@@ -7,10 +7,10 @@ namespace DataAccess;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection InjectDbContext(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddDataAccess(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<IApplicationDbContext, ApplicationDbContext>((sp, options) =>
+        services.AddDbContext<IApplicationDbContext, ApplicationDbContext>(options =>
         {
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
             {

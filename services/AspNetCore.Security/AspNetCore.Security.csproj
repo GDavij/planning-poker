@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.RateLimiting" />
+      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+        <HintPath>..\..\..\..\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\9.0.3\lib\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      </Reference>
+      <Reference Include="System.Configuration.ConfigurationManager">
+        <HintPath>..\..\..\..\.nuget\packages\system.configuration.configurationmanager\6.0.1\lib\net6.0\System.Configuration.ConfigurationManager.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
+      <PackageReference Include="Microsoft.AspNetCore.RateLimiting" Version="7.0.0-rc.2.22476.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -16,15 +16,15 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Scalar.AspNetCore" Version="2.2.5" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Application\Application\Application.csproj" />
+      <ProjectReference Include="..\AspnetCore.Observability\AspnetCore.Observability.csproj" />
+      <ProjectReference Include="..\AspNetCore.Security\AspNetCore.Security.csproj" />
       <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
       <ProjectReference Include="..\Firebase.Auth\Firebase.Auth.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="UseCases\" />
     </ItemGroup>
 
 </Project>

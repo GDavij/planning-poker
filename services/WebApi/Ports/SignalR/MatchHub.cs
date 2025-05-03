@@ -1,6 +1,6 @@
+using Application.UseCases.Planning.Matches.ApproveJoinRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using WebApi.UseCases.Commands.Matches.ApproveJoinRequest;
 using WebApi.UseCases.Commands.Matches.JoinMatch;
 
 namespace WebApi.Ports.SignalR;
@@ -29,6 +29,6 @@ public sealed class MatchHub : Hub
         };
 
         var handler = _sp.GetRequiredService<ApproveJoinRequestCommandHandler>();
-        await handler.Handle(command, CancellationToken.None);
+        await handler.Handle(command);
     }
 }

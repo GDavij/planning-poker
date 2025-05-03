@@ -13,11 +13,11 @@ public class Account
     public bool IsAdmin { get; private set; }
     
     [IgnoreDataMember]
-    public string Password { get; private set; }
+    public string? Password { get; private set; }
     
     private Account()
     { }
-
+    
     public Account(string email, string name)
     {
         Email = email;
