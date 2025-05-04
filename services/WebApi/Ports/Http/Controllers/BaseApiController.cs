@@ -1,12 +1,17 @@
 using System.Net;
+using AspNetCore.Presentation.Factories;
+using AspNetCore.Presentation.Models;
+using AspNetCore.Security.RateLimiting;
 using Domain.Abstractions;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Factories;
-using WebApi.Models;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WebApi.Ports.Http.Controllers;
 
+[ApiController]
+[EnableRateLimiting(RateLimitingDefinitions.NormalHttpRequestsRateLimit)]
+[Route("api/v1/[controller]")]
 public abstract class BaseApiController : ControllerBase
 {
     protected readonly INotificationService NotificationService;
@@ -34,6 +39,7 @@ public abstract class BaseApiController : ControllerBase
             {
                 TelemetryClient.TrackEvent("BusinessValidation", new Dictionary<string, string>
                 {
+                    { "statusCode", notification.HttpStatusCode.ToString() },
                     { "code", notification.Code },
                     { "message", notification.Message }
                 });

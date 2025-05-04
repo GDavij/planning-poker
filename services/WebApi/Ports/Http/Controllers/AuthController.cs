@@ -1,17 +1,18 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Application.UseCases.Management.Accounts.CreateAccount;
 using Application.UseCases.Management.Accounts.Me;
+using AspNetCore.Security.RateLimiting;
 using Domain.Abstractions;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace WebApi.Ports.Http.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
 [Authorize]
 public class AuthController : BaseApiController
 {
@@ -52,20 +53,15 @@ public class AuthController : BaseApiController
             
             Response.Cookies.Append("Authorization", tokenRequest.OAuthToken, cookieOptions);
         }
-        catch (FirebaseException exception)
+        catch (FirebaseException firebaseException)
         {
-            return Unauthorized("Invalid token");
+            _logger.LogError("Could not persist Firebase Auth Token to Backend, exception verifying the token, Exception: {firebaseException}.", firebaseException);
+            
+            NotificationService.AddNotification("Could not persist your token into a session token", "Auth.SaveSessionFailed", firebaseException.HttpResponse.StatusCode);
+            return RespondWith<object>(null, HttpStatusCode.InternalServerError);
         }
 
-        return Accepted();
-    }
-
-    [HttpPost("new-login")]
-    public async Task<IActionResult> CreateAccount([FromBody] CreateAccountCommand createAccountCommand, [FromServices] CreateAccountCommandHandler handler)
-    {
-        var result = await handler.Handle(createAccountCommand, CancellationToken.None);
-
-        return RespondWith(result, HttpStatusCode.Created);
+        return RespondWith<object>(null, HttpStatusCode.Accepted);
     }
 
     [HttpPost("autologin")]
@@ -83,14 +79,14 @@ public class AuthController : BaseApiController
                 PhotoUrl = User.Claims.First(c => c.Type == "picture").Value
             };
 
-            var result = await handler.Handle(createAccountCommand, CancellationToken.None);
+            var result = await handler.Handle(createAccountCommand);
 
             return RespondWith(result, HttpStatusCode.OK);
         }
         catch (Exception exception)
         {
-            _logger.LogError("Catch Exception when Trying to Authenticate Endpoint: {exception}", exception);
-            return Unauthorized();
+            _logger.LogError("Could not handle auto login for use with FirebaseId {firebaseId}. Catch Exception {exception}", User.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value, exception);
+            throw;
         }
     }
 
@@ -100,4 +96,8 @@ public class AuthController : BaseApiController
         return RespondWith(await handler.Handle(), HttpStatusCode.OK);
     }
 }
-public record TokenRequest(string OAuthToken);
+
+public record TokenRequest
+{
+    public required string OAuthToken { get; init; }
+};

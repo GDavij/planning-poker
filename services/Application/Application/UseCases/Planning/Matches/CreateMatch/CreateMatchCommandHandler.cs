@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Domain.Abstractions;
 using Domain.Abstractions.Auth.Models;
 using Domain.Abstractions.DataAccess;
@@ -6,7 +8,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.UseCases.Planning.Matches.CreateMatch;
 
-public record CreateMatchCommand(string Description, byte RoleId, bool ShouldSpectate);
+public record CreateMatchCommand
+{
+    [Required(ErrorMessage = "Description is Required")]
+    [MaxLength(120, ErrorMessage = "Description must have a max of 120 characters")]
+    public required string Description { get; init; }
+    
+    [Required(ErrorMessage = "Role Id is required")]
+    [Range(1, byte.MaxValue, ErrorMessage = "Role is not valid")]
+    public byte RoleId { get; init; }
+    
+    [Required(ErrorMessage = "You need to say if you gonna enter the match as a spectator or not")]
+    public bool ShouldSpectate { get; init; }
+}
 
 public record CreateMatchCommandResponse(long MatchId);
 
@@ -28,7 +42,7 @@ public class CreateMatchCommandHandler
         var role = await _dbContext.Roles.FirstOrDefaultAsync(r => r.RoleId == request.RoleId);
         if (role is null)
         {
-            _notificationService.AddNotification("Role could not be found", "Roles.NotFound");
+            _notificationService.AddNotification("Role could not be found", "Roles.NotFound", HttpStatusCode.NotFound);
             return null;
         }
         

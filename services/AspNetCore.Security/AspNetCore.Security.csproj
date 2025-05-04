@@ -7,6 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Reference Include="Microsoft.ApplicationInsights">
+        <HintPath>..\..\..\..\.nuget\packages\microsoft.applicationinsights\2.23.0\lib\netstandard2.0\Microsoft.ApplicationInsights.dll</HintPath>
+      </Reference>
       <Reference Include="Microsoft.AspNetCore.RateLimiting" />
       <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
         <HintPath>..\..\..\..\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\9.0.3\lib\net9.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
@@ -22,6 +25,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Application\Application\Application.csproj" />
+      <ProjectReference Include="..\AspnetCore.Observability\AspnetCore.Observability.csproj" />
+      <ProjectReference Include="..\AspNetCore.Presentation\AspNetCore.Presentation.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>
 

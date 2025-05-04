@@ -24,10 +24,10 @@ public static class DependencyInjection
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
-            
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Development")
+
+            logging.AddConsole();
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
             {
-                logging.AddConsole();
                 logging.AddDebug();
             }
 
@@ -38,6 +38,8 @@ public static class DependencyInjection
             logging.AddFilter<ApplicationInsightsLoggerProvider>("System", LogLevel.Warning);
         });
 
+        services.AddScoped<RequestLoggingMiddleware>();
+        
         return services;
     }
     

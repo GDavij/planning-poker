@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.UseCases.Planning.Matches.ListRoles;
 
-public record ListRolesQueryResponse(byte RoleId, string Name, string Abbreviation);
+public record ListRolesQueryResponse(byte RoleId, string Name, string? Abbreviation);
 
 public class ListRolesQueryHandler
 {

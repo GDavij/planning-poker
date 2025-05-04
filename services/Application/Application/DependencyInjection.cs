@@ -1,10 +1,12 @@
 using Application.Abstractions.SignalR;
+using Application.Notification;
 using Application.SignalR;
 using Application.UseCases.Management.Accounts.CreateAccount;
 using Application.UseCases.Management.Accounts.Me;
 using Application.UseCases.Planning.Matches.ApproveJoinRequest;
 using Application.UseCases.Planning.Matches.CloseMatch;
 using Application.UseCases.Planning.Matches.CreateMatch;
+using Application.UseCases.Planning.Matches.JoinMatch;
 using Application.UseCases.Planning.Matches.ListMatches;
 using Application.UseCases.Planning.Matches.ListParticipants;
 using Application.UseCases.Planning.Matches.ListRoles;
@@ -14,9 +16,9 @@ using Application.UseCases.Planning.Stories.ListStories;
 using Application.UseCases.Planning.Stories.SelectStory;
 using Application.UseCases.Planning.Stories.UpdateStory;
 using Application.UseCases.Planning.Stories.VoteStory;
+using Domain.Abstractions;
 using Domain.Abstractions.SignalR;
 using Microsoft.Extensions.DependencyInjection;
-using WebApi.UseCases.Commands.Matches.JoinMatch;
 
 namespace Application;
 
@@ -46,6 +48,13 @@ public static class DependencyInjection
         services.AddScoped<SelectStoryCommandHandler>();
         services.AddScoped<UpdateStoryCommandHandler>();
         services.AddScoped<VoteStoryCommandHandler>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddNotification(this IServiceCollection services)
+    {
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }

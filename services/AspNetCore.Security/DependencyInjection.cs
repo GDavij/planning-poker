@@ -1,10 +1,19 @@
 using System.Configuration;
+using System.Net;
 using System.Threading.RateLimiting;
+using AspNetCore.Presentation.Models;
+using AspNetCore.Security.Middlewares;
 using AspNetCore.Security.RateLimiting;
+using AspNetCore.Security.Settings;
+using Domain.Abstractions.Notification;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace AspNetCore.Security;
 
@@ -40,9 +49,36 @@ public static class DependencyInjection
                         QueueLimit = 10, // Larger queue for real-time communications
                         AutoReplenishment = true
                     }));
-        });
 
+            options.OnRejected = async (context, cancellation) =>
+            {
+                context.HttpContext.Response.StatusCode = 429;
+                context.HttpContext.Response.Headers["Retry-After"] = "60";
+
+                var httpContextAccessor = context.HttpContext.RequestServices.GetRequiredService<IHttpContextAccessor>();
+                var telemetryClient = context.HttpContext.RequestServices.GetRequiredService<TelemetryClient>();
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<IRateLimiterAssemblyMarker>>();
+                
+                logger.LogError("TOO MANY REQUESTS from Ip: {remoteIpAddress} - POSSIBLE DDOS",  context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "THREAT");
+                
+                await context.HttpContext.Response.WriteAsJsonAsync(new ApiResponse<object>
+                {
+                    Success = false,
+                    Data = null,
+                    Notifications = [new Notification("Too Many Requests", "Requests.PossibleDDOS", HttpStatusCode.TooManyRequests)],
+                    Meta = new MetaData(httpContextAccessor, telemetryClient)
+                }, cancellation);
+            };
+        });
+        
         return services;
+    }
+
+    public static IApplicationBuilder UseCustomRateLimiting(this IApplicationBuilder app)
+    {
+        app.UseRateLimiter();
+
+        return app;
     }
 
     public static IServiceCollection AddFirebaseJwtValidation(
@@ -79,27 +115,37 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.Configure<CorsSettings>(configuration.GetSection("Cors"));
+        
         services.AddCors(options =>
         {
+            var corsSettings = services.BuildServiceProvider().GetRequiredService<IOptions<CorsSettings>>().Value;
+            
             options.AddDefaultPolicy(policy =>
             {
-                var origins = configuration.GetValue<string>("Cors:Origins") 
-                              ?? throw new ConfigurationErrorsException("Cors:Origins");
         
-                var headers = configuration.GetValue<string[]>("Cors:Headers") 
-                              ?? throw new ConfigurationErrorsException("Configuration Cors:Headers does not have a valid value...");
-        
-                var methods = configuration.GetValue<string[]>("Cors:Headers") 
-                              ?? throw new ConfigurationErrorsException("Configuration Cors:Headers does not have a valid value...");
-        
-                policy.WithOrigins(origins) // Adjust based on frontend URL
-                    .WithHeaders(headers)
-                    .WithMethods(methods)
+                policy.WithOrigins(corsSettings.Origins) // Adjust based on frontend URL
+                    .WithHeaders(corsSettings.Headers)
+                    .WithMethods(corsSettings.Methods)
                     .AllowCredentials();
             });
         });
 
         return services;
     }
+
+    public static IServiceCollection AddErrorHandlerMiddleware(this IServiceCollection services)
+    {
+        services.AddScoped<ErrorHandlerMiddleware>();
+
+        return services;
+    }
     
+    public static IApplicationBuilder UseErrorHandlerMiddleware(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<ErrorHandlerMiddleware>();
+
+        return app;
+    }
 }
+

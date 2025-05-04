@@ -5,12 +5,12 @@ namespace Application.UseCases.Planning.Stories.ListStories;
 
 public record ListStoriesQueryResponse
 {
-    public long StoryId { get; init; }
-    public long MatchId { get; init; }
-    public string Name { get; init; }
-    public string? StoryNumber { get; init; }
-    public short Order { get; init; }
-    public List<StoryPointResponse> StoryPoints { get; init; }
+    public required long StoryId { get; init; }
+    public required long MatchId { get; init; }
+    public required string Name { get; init; }
+    public required string? StoryNumber { get; init; }
+    public required short Order { get; init; }
+    public required List<StoryPointResponse> StoryPoints { get; init; } = [];
 };
 
 public record StoryPointResponse(short Points, string ParticipantName);

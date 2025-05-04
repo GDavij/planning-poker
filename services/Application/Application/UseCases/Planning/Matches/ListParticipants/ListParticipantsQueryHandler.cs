@@ -3,13 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.UseCases.Planning.Matches.ListParticipants;
 
-public class ListParticipantsQueryResponse
+public record ListParticipantsQueryResponse
 {
-    public long AccountId { get; init; }
-    public string RoleName { get; init; }
-    public bool IsSpectating { get; init; }
-    public string ParticipantName { get; init; }
-    public List<VoteWithoutPoints> Votes { get; init; }
+    public required long AccountId { get; init; }
+    public required string RoleName { get; init; }
+    public required bool IsSpectating { get; init; }
+    public required string ParticipantName { get; init; }
+    public required List<VoteWithoutPoints> Votes { get; init; } = [];
 }
 
 public record VoteWithoutPoints(long StoryId, bool HasVotedAlready);

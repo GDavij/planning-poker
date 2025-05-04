@@ -8,10 +8,10 @@ public record ListMatchesQuery(int Page, byte Limit);
 
 public record ListMatchesQueryResponse
 {
-    public long MatchId { get; init; }
-    public string Description { get; init; }
-    public bool HasStarted { get; init; }
-    public bool HasClosed { get; init; }
+    public required long MatchId { get; init; }
+    public required string Description { get; init; }
+    public required bool HasStarted { get; init; }
+    public required bool HasClosed { get; init; }
 };
 
 public class ListMatchesQueryHandler 

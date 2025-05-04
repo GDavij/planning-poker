@@ -1,11 +1,14 @@
 using Application.UseCases.Planning.Matches.ApproveJoinRequest;
+using Application.UseCases.Planning.Matches.JoinMatch;
+using AspNetCore.Security.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
-using WebApi.UseCases.Commands.Matches.JoinMatch;
 
 namespace WebApi.Ports.SignalR;
 
 [Authorize]
+[EnableRateLimiting(RateLimitingDefinitions.WebSocketsHttpRequestsRateLimit)]
 public sealed class MatchHub : Hub
 {
     private readonly IServiceProvider _sp;

@@ -1,3 +1,4 @@
+using System.Net;
 using Application.Abstractions.SignalR;
 using Application.UseCases.Planning.Matches.ListParticipants;
 using Domain.Abstractions;
@@ -6,11 +7,11 @@ using Domain.Abstractions.DataAccess;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace WebApi.UseCases.Commands.Matches.JoinMatch;
+namespace Application.UseCases.Planning.Matches.JoinMatch;
 
 public record JoinMatchCommand(long MatchId, string ConnectionId);
 
-public record JoinMatchCommandResponse();
+public record JoinMatchCommandResponse;
 
 public class JoinMatchCommandHandler
 {
@@ -36,7 +37,7 @@ public class JoinMatchCommandHandler
 
         if (match is null)
         {
-            _notificationService.AddNotification("Could not find match.", "Matches.NotFound");
+            _notificationService.AddNotification("Could not find match.", "Matches.NotFound", HttpStatusCode.NotFound);
             return null;
         }
         
@@ -44,7 +45,7 @@ public class JoinMatchCommandHandler
 
         if (participant is null)
         {
-            // Temporally create an auto join for player (Just to send to my teacher cause i don't have time to implement a better alternative for now...)
+            // Temporally create an auto join for player (Just to send to my teacher because don't have time to implement a better alternative for now...)
             // IN FUTURE IT SHOULD REQUEST A APPROVAL FROM THE PARTICIPANTS OF THE MATCH...
             
             var role = await _dbContext.Roles.FirstAsync(r => r.RoleId == 15, CancellationToken.None);

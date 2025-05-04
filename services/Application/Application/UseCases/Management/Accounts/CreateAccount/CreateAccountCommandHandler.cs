@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Domain.Abstractions;
 using Domain.Abstractions.Auth;
 using Domain.Abstractions.DataAccess;
@@ -8,15 +10,19 @@ namespace Application.UseCases.Management.Accounts.CreateAccount;
 
 public record CreateAccountCommand
 {
+    [EmailAddress(ErrorMessage = "Email must be valid")]
+    [MaxLength(60, ErrorMessage = "Email must have a max of 60 characters")]
+    [Required(ErrorMessage = "Email is Required")]
     public string Email { get; init; }
+    
+    [MaxLength(80, ErrorMessage = "Name must have a max of 80 characters")]
+    [Required(ErrorMessage = "Name is Required")]
     public string Name { get; init; }
+    
     public string? Password { get; init; }
     public string? FirebaseUserId { get; init; }
     public string? PhotoUrl { get; init; }
     
-    private CreateAccountCommand() 
-    { }
-
     public CreateAccountCommand(string email, string name, string? password)
     {
         Email = email;
@@ -43,21 +49,20 @@ public class CreateAccountCommandHandler
         _notificationService = notificationService;
     }
 
-    public async Task<CreateAccountCommandResponse> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
+    public async Task<CreateAccountCommandResponse?> Handle(CreateAccountCommand request)
     {
-        var existsAnyAccountWithSameEmail = await _dbContext.Accounts.AnyAsync(a => a.Email == request.Email && !a.Deleted, cancellationToken);
-        if (existsAnyAccountWithSameEmail && string.IsNullOrEmpty(request.FirebaseUserId))
+        var existentAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email && !a.Deleted);
+        if (existentAccount is not null && string.IsNullOrEmpty(request.FirebaseUserId))
         {
-            _notificationService.AddNotification("Account with this email already exists", "account.exists");
+            _notificationService.AddNotification("Account with this email already exists", "account.exists", HttpStatusCode.NotFound);
             return null;
         }
-        else if (existsAnyAccountWithSameEmail)
+        else if (existentAccount is not null)
         {
-            var currentAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email && !a.Deleted, cancellationToken);
-            currentAccount.UseFirebaseIdentity(request.FirebaseUserId);
+            existentAccount.UseFirebaseIdentity(request.FirebaseUserId!);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return new CreateAccountCommandResponse(currentAccount.AccountId);
+            await _dbContext.SaveChangesAsync();
+            return new CreateAccountCommandResponse(existentAccount.AccountId);
         }
 
         var account = new Account(request.Email, request.Name);
@@ -82,7 +87,7 @@ public class CreateAccountCommandHandler
             await _authService.StoreAccount(account);
         }
 
-        await _dbContext.SaveChangesAsync(CancellationToken.None);
+        await _dbContext.SaveChangesAsync();
 
         return new CreateAccountCommandResponse(account.AccountId);
     }

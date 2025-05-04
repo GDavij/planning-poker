@@ -3,18 +3,16 @@ using Microsoft.Extensions.Logging;
 
 namespace AspnetCore.Observability.Middlewares;
 
-public class RequestLoggingMiddleware
+public class RequestLoggingMiddleware : IMiddleware
 {
-    private readonly RequestDelegate _next;
     private readonly ILogger<RequestLoggingMiddleware> _logger;
 
-    public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
+    public RequestLoggingMiddleware(ILogger<RequestLoggingMiddleware> logger)
     {
-        _next = next;
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
         {
@@ -35,7 +33,7 @@ public class RequestLoggingMiddleware
                     context.Request.Path,
                     clientIp);
 
-                await _next(context);
+                await next(context);
             }
         }
         catch (Exception ex)

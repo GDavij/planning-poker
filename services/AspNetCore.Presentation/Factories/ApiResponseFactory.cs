@@ -1,7 +1,7 @@
+using AspNetCore.Presentation.Models;
 using Domain.Abstractions;
-using WebApi.Models;
 
-namespace WebApi.Factories;
+namespace AspNetCore.Presentation.Factories;
 
 public static class ApiResponseFactory
 {

@@ -1,0 +1,3 @@
+namespace AspNetCore.Security.RateLimiting;
+
+public interface IRateLimiterAssemblyMarker;
