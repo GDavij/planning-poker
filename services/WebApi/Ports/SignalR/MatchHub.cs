@@ -26,11 +26,6 @@ public sealed class MatchHub : Hub
 
     public async Task ApproveMatchAsync(ApproveJoinRequestCommand command)
     {
-        command = command with
-        {
-            ApproverConnectionId = Context.ConnectionId
-        };
-
         var handler = _sp.GetRequiredService<ApproveJoinRequestCommandHandler>();
         await handler.Handle(command);
     }
