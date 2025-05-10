@@ -1,14 +1,13 @@
 import { createBrowserRouter, Outlet } from "react-router";
-import { UnauthenticatedLayout } from "./layout/unauthenticated.layout";
 import { CssBaseline } from "@mui/material";
-import { LandingPage } from "./pages/landing-page";
-import { SignInPage } from "./pages/auth/signin/signin";
 import { HomeDashboard } from "./pages/dashboard/home.dashboard";
-import { MatchGamePage } from "./layout/match-connection.layout";
+import { MatchGamePage } from "./shared/middlewares/match-connection.middleware";
 import { CreateMatchPage } from "./pages/matches/create-match.dashboard";
-import { AuthenticatedLayout } from "./layout/authenticated.layout";
+import { AuthenticatedLayout } from "./shared/middlewares/authenticated.middleware";
 import { PartyPage } from "./pages/matches/party/party-page";
 import { JoinMatchPage } from "./pages/matches/join/join-match.page";
+import { UnauthenticatedLayout } from "./shared/middlewares/unauthenticated.middleware";
+import { SignInPage } from "./pages/auth/signin/signin";
 
 const CssLayout = () => {
   return (

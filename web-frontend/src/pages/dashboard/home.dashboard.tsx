@@ -9,10 +9,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { listUserCreatedMatches } from "../../services/match.service";
-import { ListMatchesQueryResponse } from "../../models/matches";
+import { listUserCreatedMatches } from "../../shared/hooks/integrations/api/match.service";
+import { ListMatchesQueryResponse } from "../../shared/models/matches";
 import { useNavigate } from "react-router";
-import { useJoinMatchModal } from "../../forms/stories/join-match.modal.form";
+import { useJoinMatchModal } from "../../features/stories/join-match.modal.form";
 
 export function HomeDashboard() {
   const [abortController] = useState(new AbortController());

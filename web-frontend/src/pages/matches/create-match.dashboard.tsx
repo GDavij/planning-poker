@@ -11,8 +11,11 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ListRolesQueryResponse } from "../../models/matches";
-import { listMatchRoles, startMatchAs } from "../../services/match.service";
+import { ListRolesQueryResponse } from "../../shared/models/matches";
+import {
+  listMatchRoles,
+  startMatchAs,
+} from "../../shared/hooks/integrations/api/match.service";
 import { useNavigate, useParams } from "react-router";
 
 type CreateMatchFormData = {

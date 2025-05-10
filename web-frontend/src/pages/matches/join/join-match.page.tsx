@@ -5,13 +5,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useSignalRContext } from "../../../contexts/signalr.context";
 import { useEffect } from "react";
 import {
   SignalRMatchHubClientEndpoints,
   SignalRMatchHubServerEndpoints,
-} from "../../../consts/signalr/signalr-match-hub.endpoints";
+} from "../../../shared/consts/signalr-match-hub.endpoints";
 import { useNavigate, useParams } from "react-router";
+import { useSignalRContext } from "../../../shared/contexts/signalr.context";
 
 export function JoinMatchPage() {
   const { matchId } = useParams();

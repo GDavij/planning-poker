@@ -1,30 +1,16 @@
-import {
-  Button,
-  Card,
-  Container,
-  Grid2,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { memo, useEffect, useState } from "react";
-import { useSignalRContext } from "../../../contexts/signalr.context";
-import { Participant, Story, Vote } from "../../../models/matches";
-import {
-  listMatchStories,
-  voteForStory,
-} from "../../../services/match.service";
+import { Button, Card, Grid2, Stack, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Participant, Vote } from "../../../shared/models/matches";
+import { voteForStory } from "../../../shared/hooks/integrations/api/match.service";
 import { useParams } from "react-router";
-import { StoriesListForm } from "../../../forms/stories/stories-list.form";
-import { SignalRMatchHubServerEndpoints } from "../../../consts/signalr/signalr-match-hub.endpoints";
-import { AppCard } from "../../../components/app-card";
-import { HighlightPaper } from "../../../components/app-paper";
-import { useSnackbar } from "../../../components/snackbar";
-import { useDebounce } from "../../../hooks/debounce";
-import { useSpring, animated } from "@react-spring/web";
-import { CurrenlyShowingStoryViewer } from "../../../forms/stories/currentVotingStory.form";
-import { useParticipants } from "../../../stores/participants-store";
-import { useAuth } from "../../../stores/auth-store";
-import { useMatch } from "../../../stores/match-store";
+import { StoriesListForm } from "../../../features/stories/stories-list.form";
+import { SignalRMatchHubServerEndpoints } from "../../../shared/consts/signalr-match-hub.endpoints";
+import { useSnackbar } from "../../../shared/ui/snackbar";
+import { CurrenlyShowingStoryViewer } from "../../../features/stories/currentVotingStory.form";
+import { useParticipants } from "../../../shared/stores/participants-store";
+import { useAuthStore } from "../../../shared/stores/auth-store";
+import { useMatch } from "../../../shared/stores/match-store";
+import { useSignalRContext } from "../../../shared/contexts/signalr.context";
 
 export function PartyPage() {
   const complexities = [
@@ -70,7 +56,7 @@ export function PartyPage() {
   } = useSignalRContext();
 
   const { participants, voteOrReplace } = useParticipants();
-  const { accountId } = useAuth();
+  const { accountId } = useAuthStore();
   const { currentShowingStory } = useMatch();
 
   // Bug with Closures, Stories not updating after creation for be shown to the user
