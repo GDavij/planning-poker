@@ -1,6 +1,8 @@
+using System.Net;
 using Application.Abstractions.SignalR;
 using Application.UseCases.Planning.Matches.ListParticipants;
 using Application.UseCases.Planning.Stories.ListStories;
+using Domain.Abstractions;
 using Domain.Abstractions.SignalR;
 using Domain.Entities;
 
@@ -60,8 +62,14 @@ public class MatchSignalRIntegrationIntegrationClient : IMatchSignalRIntegration
         throw new NotImplementedException();
     }
 
-    public Task JoinParticipantToMatchAsync(Participant participant, Match match)
+    public async Task JoinParticipantToMatchAsync(Participant participant, Match match, INotificationService notificationService)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(participant.SignalRConnectionId))
+        {
+            notificationService.AddNotification("Participant is not connected to the Hub...", "Participan.NoHubConnection", HttpStatusCode.Gone);
+        }
+        
+        await _signalRService.AddUserClientIdToGroup(participant.SignalRConnectionId!, match.MatchId.ToString());
+        await _signalRService.SendAsyncForClient(participant.SignalRConnectionId!, "ApproveJoinRequest");
     }
 }

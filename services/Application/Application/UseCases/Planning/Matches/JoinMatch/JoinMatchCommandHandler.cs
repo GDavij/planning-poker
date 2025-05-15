@@ -61,7 +61,11 @@ public class JoinMatchCommandHandler
 
 
         participant.ConnectedAt(request.ConnectionId);
-        await _matchSignalRIntegrationIntegrationClient.JoinParticipantToMatchAsync(participant, match);
+        await _matchSignalRIntegrationIntegrationClient.JoinParticipantToMatchAsync(participant, match, _notificationService);
+        if (_notificationService.HasNotifications())
+        {
+            return null;
+        }
         
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 

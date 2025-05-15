@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { listUserCreatedMatches } from "../../shared/hooks/integrations/api/match.service";
+import { useListUserCreatedMatches } from "../../shared/hooks/integrations/api/match.service";
 import { ListMatchesQueryResponse } from "../../shared/models/matches";
 import { useNavigate } from "react-router";
 import { useJoinMatchModal } from "../../features/stories/join-match.modal.form";
@@ -23,22 +23,11 @@ export function HomeDashboard() {
 
   const { open: openJoinModal } = useJoinMatchModal();
 
-  const [userCreatedMatches, setUserCreatedMatches] = useState<
-    ListMatchesQueryResponse[]
-  >([]);
-
-  const loadTop10CreatedMatches = () => {
-    setIsLoadingCreatedMatches(true);
-
-    listUserCreatedMatches(1, 50, abortController)
-      .then((res) => setUserCreatedMatches(res.data))
-      .catch(() => {})
-      .finally(() => setIsLoadingCreatedMatches(false));
-  };
-
-  useEffect(() => {
-    loadTop10CreatedMatches();
-  }, []);
+  const { matches, isFetching } = useListUserCreatedMatches(
+    1,
+    50,
+    abortController,
+  );
 
   const createMatch = () => navigate("/dashboard/matches/new");
 
@@ -99,11 +88,11 @@ export function HomeDashboard() {
               </Divider>
 
               <Stack spacing={2}>
-                {isLoadingCreatedMatches
+                {isFetching
                   ? [1, 2, 3].map((cardIndex) => (
                       <Skeleton key={cardIndex} width="100%" height={120} />
                     ))
-                  : userCreatedMatches.map((match) => (
+                  : matches.map((match) => (
                       <Card
                         sx={{
                           widows: "100%",

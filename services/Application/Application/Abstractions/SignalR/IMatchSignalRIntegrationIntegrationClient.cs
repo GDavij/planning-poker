@@ -1,5 +1,6 @@
 using Application.UseCases.Planning.Matches.ListParticipants;
 using Application.UseCases.Planning.Stories.ListStories;
+using Domain.Abstractions;
 using Domain.Abstractions.SignalR;
 using Domain.Entities;
 
@@ -16,6 +17,6 @@ public interface IMatchSignalRIntegrationIntegrationClient : ISignalRIntegration
     Task NotifyStoryVoteAsync(StoryPoint storyPoint);
     Task NotifyAllParticipantsVotedForStoryAsync(Story story);
     
-    Task JoinParticipantToMatchAsync(Participant participant, Match match);
+    Task JoinParticipantToMatchAsync(Participant participant, Match match, INotificationService notificationService);
     
 }
