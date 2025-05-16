@@ -1,32 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  ListRolesQueryResponse,
-  Story,
-  StartMatchCommandResponse,
-  Participant,
-} from "../../../models/matches";
+import { Story, Participant } from "../../../models/matches";
 import { api } from "./axios.service";
-
-export function listMatchRoles(abortController: AbortController) {
-  return api
-    .get<ListRolesQueryResponse[]>("matches/roles", {
-      signal: abortController.signal,
-    })
-    .then((r) => r.data);
-}
-
-export function listMatchStories(matchId: number) {
-  return api
-    .get<Story[]>(`/matches/match/${matchId}/stories`)
-    .then((r) => r.data);
-}
-
-export function updateStory(story: Story) {
-  return api.put<void>(
-    `/matches/match/${story.matchId}/story/${story.storyId}/update`,
-    story,
-  );
-}
 
 export function createStory(story: Story) {
   return api.post<void>(`/matches/match/${story.matchId}/story/add`, story);

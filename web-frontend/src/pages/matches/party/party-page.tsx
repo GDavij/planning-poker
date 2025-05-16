@@ -4,13 +4,14 @@ import { Participant, Vote } from "../../../shared/models/matches";
 import { voteForStory } from "../../../shared/hooks/integrations/api/match.service";
 import { useParams } from "react-router";
 import { StoriesListForm } from "../../../features/stories/stories-list.form";
-import { SignalRMatchHubServerEndpoints } from "../../../shared/consts/signalr-match-hub.endpoints";
 import { useSnackbar } from "../../../shared/ui/snackbar";
 import { CurrenlyShowingStoryViewer } from "../../../features/stories/currentVotingStory.form";
 import { useParticipants } from "../../../shared/stores/participants-store";
 import { useAuthStore } from "../../../shared/stores/auth-store";
 import { useMatch } from "../../../shared/stores/match-store";
 import { useSignalRContext } from "../../../shared/contexts/signalr.context";
+import { SignalRPorts } from "../../../shared/consts/signalRPorts";
+import { SignalRHooks } from "../../../shared/consts/signalRHooks";
 
 export function PartyPage() {
   const complexities = [
@@ -48,35 +49,25 @@ export function PartyPage() {
 
   const { showSuccess, showError } = useSnackbar();
 
-  const {
-    signalRClient,
-    registerEndpointFor,
-    invokeAsyncFor,
-    disconnectFromEndpointFor,
-  } = useSignalRContext();
+  const { registerEndpointFor, invokeAsyncFor, disconnectFromEndpointFor } =
+    useSignalRContext();
 
   const { participants, voteOrReplace } = useParticipants();
-  const { accountId } = useAuthStore();
+  const { me } = useAuthStore();
   const { currentShowingStory } = useMatch();
 
   // Bug with Closures, Stories not updating after creation for be shown to the user
   useEffect(() => {
-    invokeAsyncFor(
-      signalRClient,
-      SignalRMatchHubServerEndpoints.JoinMatch,
-      Number(matchId),
-    );
+    invokeAsyncFor(SignalRPorts.ToJoinMain, Number(matchId));
 
-    disconnectFromEndpointFor(signalRClient, "SomeoneVoted").then(() => {
-      registerEndpointFor(signalRClient, "SomeoneVoted", (vote) => {
-        const voteObj = vote as {
-          storyId: number;
-          complexity: number;
-          accountId: number;
-        };
+    registerEndpointFor(SignalRHooks.OnAnyoneVote, (vote) => {
+      const voteObj = vote as {
+        storyId: number;
+        complexity: number;
+        accountId: number;
+      };
 
-        voteOrReplace(voteObj.storyId, voteObj.complexity, voteObj.accountId);
-      });
+      voteOrReplace(voteObj.storyId, voteObj.complexity, voteObj.accountId);
     });
   }, []);
 
@@ -132,7 +123,7 @@ export function PartyPage() {
               >
                 {currentShowingStory !== null &&
                   complexities.map((complexity) => (
-                    <Grid2 key={complexity.points} xs="auto">
+                    <Grid2 key={complexity.points}>
                       <Button
                         sx={{ background: "#0000" }}
                         disabled={isVotingComplexity !== null}
@@ -154,7 +145,7 @@ export function PartyPage() {
                             background: hasVotedFor(
                               complexity.points,
                               participants.find(
-                                (p) => p.accountId == accountId,
+                                (p) => p.accountId == me?.accountId,
                               ),
                             )
                               ? "#88d"

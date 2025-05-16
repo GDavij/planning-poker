@@ -3,9 +3,7 @@ import { Story } from "../../shared/models/matches";
 import {
   deleteStory,
   finishMatch,
-  listMatchStories,
   selectStoryToAnalyze,
-  updateStory,
 } from "../../shared/hooks/integrations/api/match.service";
 import { useNavigate, useParams } from "react-router";
 import {
@@ -26,8 +24,10 @@ import { useSnackbar } from "../../shared/ui/snackbar";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useConfirmation } from "../../shared/ui/confirmation-dialog";
 import { AppCard } from "../../shared/ui/app-card";
-import { useMatch } from "../../shared/stores/match-store";
 import { useSignalRContext } from "../../shared/contexts/signalr.context";
+import { useListMatchStories } from "../../shared/hooks/integrations/api/matches/use-list-matches-stories.integration";
+import { SignalRHooks } from "../../shared/consts/signalRHooks";
+import { useUpdateStory } from "../../shared/hooks/integrations/api/matches/use-update-story.integration";
 
 const StoriesContainer = styled(Stack)(({ theme }) => ({
   borderRight: "2px solid #eef",
@@ -269,45 +269,21 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
 }
 
 export function StoriesListForm() {
-  const { registerEndpointFor, disconnectFromEndpointFor, signalRClient } =
-    useSignalRContext();
-
-  const navigate = useNavigate();
-
   const matchId = Number(useParams()?.matchId);
-  const syncFetchStories = useMemo(() => listMatchStories(matchId), [matchId]);
+
+  const { stories, setStoriesFunc, isFetching } = useListMatchStories(matchId);
+  const navigate = useNavigate();
+  const { registerEndpointFor } = useSignalRContext();
   const { open } = useCreateStoryFormModal();
   const { showSuccess, showError } = useSnackbar();
   const { confirm } = useConfirmation();
+  const { updateStory } = useUpdateStory();
 
   useEffect(() => {
-    syncFetchStories.then((stories) => setStories(stories));
-  }, [syncFetchStories]);
-
-  useEffect(() => {
-    disconnectFromEndpointFor(signalRClient, "updatestoriesofmatchwith").then(
-      () => {
-        registerEndpointFor(
-          signalRClient,
-          "updatestoriesofmatchwith",
-          (serverStories) => {
-            setStories(serverStories as Story[]);
-          },
-        );
-      },
-    );
-
-    registerEndpointFor(signalRClient, "MatchClosed", () => {
+    registerEndpointFor(SignalRHooks.OnMatchClosed, () => {
       navigate("/dashboard");
     });
-
-    // return () => {
-    //   disconnectFromEndpointFor(signalRClient, "UpdateStoriesOfMatchWith");
-    //   disconnectFromEndpointFor(signalRClient, "MatchClosed");
-    // };
   });
-
-  const { stories, setStories, setStoriesFunc } = useMatch();
 
   // Use a ref to measure actual story heights
   const storyRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -440,106 +416,109 @@ export function StoriesListForm() {
           height: "100%",
         }}
       >
-        <StoriesContainer
-          spacing={2}
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Stack spacing={2}>
-            <Button
-              variant="outlined"
-              color="error"
-              sx={{
-                width: { xs: "100%", sm: "auto" },
-              }}
-              onClick={closeMatch}
-            >
-              End Match
-            </Button>
-
-            <Button
-              variant="outlined"
-              color="primary"
-              sx={{
-                width: { xs: "100%", sm: "auto" },
-              }}
-              onClick={returnToDash}
-            >
-              Return to Dashboard
-            </Button>
-          </Stack>
-          <Tooltip title="Click to update now">
-            <Button
-              variant="outlined"
-              disabled={!hasDetectedChanges}
-              onClick={forceUpdateStories}
-              fullWidth
-              sx={{ alignSelf: "flex-start" }}
-            >
-              <Stack direction="row" alignItems={"center"} spacing={1}>
-                <Typography>
-                  {hasDetectedChanges
-                    ? "Waiting to persist stories changes"
-                    : "Stories"}
-                </Typography>
-                {hasDetectedChanges && <CircularProgress size={16} />}
-              </Stack>
-            </Button>
-          </Tooltip>
-
-          <Stack
+        {isFetching ? (
+          <CircularProgress />
+        ) : (
+          <StoriesContainer
             spacing={2}
             sx={{
-              overflow: "auto", // Changed from "scroll" to "auto"
-              height: {
-                xs: "calc(100vh - 260px)", // More space on small screens
-                sm: "calc(100vh - 260px)",
-                md: "calc(100vh - 300px)",
-              },
-              flexGrow: 1,
-              position: "relative",
-              width: "100%",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
             }}
           >
-            <DndProvider backend={HTML5Backend}>
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  height: totalListHeight,
-                  minHeight: "100%",
+            <Stack spacing={2}>
+              <Button
+                variant="outlined"
+                color="error"
+                sx={{
+                  width: { xs: "100%", sm: "auto" },
                 }}
+                onClick={closeMatch}
               >
-                {transitions((style, story) => (
-                  <animated.div
-                    style={{
-                      ...style,
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      width: "100%",
-                    }}
-                    ref={(el) => {
-                      // Store ref to measure height
-                      storyRefs.current[story.storyId] = el;
-                    }}
-                  >
-                    <StoryCard
-                      key={story.storyId}
-                      story={story}
-                      index={story.order - 1}
-                      moveStory={moveStory}
-                    />
-                  </animated.div>
-                ))}
-              </div>
-            </DndProvider>
-          </Stack>
-        </StoriesContainer>
+                End Match
+              </Button>
 
+              <Button
+                variant="outlined"
+                color="primary"
+                sx={{
+                  width: { xs: "100%", sm: "auto" },
+                }}
+                onClick={returnToDash}
+              >
+                Return to Dashboard
+              </Button>
+            </Stack>
+            <Tooltip title="Click to update now">
+              <Button
+                variant="outlined"
+                disabled={!hasDetectedChanges}
+                onClick={forceUpdateStories}
+                fullWidth
+                sx={{ alignSelf: "flex-start" }}
+              >
+                <Stack direction="row" alignItems={"center"} spacing={1}>
+                  <Typography>
+                    {hasDetectedChanges
+                      ? "Waiting to persist stories changes"
+                      : "Stories"}
+                  </Typography>
+                  {hasDetectedChanges && <CircularProgress size={16} />}
+                </Stack>
+              </Button>
+            </Tooltip>
+
+            <Stack
+              spacing={2}
+              sx={{
+                overflow: "auto", // Changed from "scroll" to "auto"
+                height: {
+                  xs: "calc(100vh - 260px)", // More space on small screens
+                  sm: "calc(100vh - 260px)",
+                  md: "calc(100vh - 300px)",
+                },
+                flexGrow: 1,
+                position: "relative",
+                width: "100%",
+              }}
+            >
+              <DndProvider backend={HTML5Backend}>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: totalListHeight,
+                    minHeight: "100%",
+                  }}
+                >
+                  {transitions((style, story) => (
+                    <animated.div
+                      style={{
+                        ...style,
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        width: "100%",
+                      }}
+                      ref={(el) => {
+                        // Store ref to measure height
+                        storyRefs.current[story.storyId] = el;
+                      }}
+                    >
+                      <StoryCard
+                        key={story.storyId}
+                        story={story}
+                        index={story.order - 1}
+                        moveStory={moveStory}
+                      />
+                    </animated.div>
+                  ))}
+                </div>
+              </DndProvider>
+            </Stack>
+          </StoriesContainer>
+        )}
         <StoryActions sx={{ flexShrink: 0 }}>
           <Button
             variant="contained"

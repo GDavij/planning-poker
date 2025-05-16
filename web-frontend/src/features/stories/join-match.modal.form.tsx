@@ -3,7 +3,6 @@ import { ModalHandlerState } from "../../shared/models/form";
 import { Box, Button, Card, Modal, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { useSnackbar } from "../../shared/ui/snackbar";
 import { useNavigate } from "react-router";
 
 export const useJoinMatchModal = create<ModalHandlerState<unknown>>()(

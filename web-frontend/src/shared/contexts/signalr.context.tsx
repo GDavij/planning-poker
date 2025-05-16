@@ -1,29 +1,22 @@
-import { HubConnection } from "@microsoft/signalr";
 import { createContext, useContext } from "react";
 import { useSignalR } from "../hooks/helpers/use-signalr";
 
 export type ClientActionDeclarationFunc = (
-  signalRClient: HubConnection,
   endpointName: string,
   handler: (...args: unknown[]) => Promise<void> | void,
 ) => Promise<void>;
 
 export type InvokeServerActionFunc = (
-  signalRClient: HubConnection,
   methodName: string,
   ...args: unknown[]
 ) => Promise<unknown>;
 
-export type DisconectFromEndpointFunc = (
-  signalRClient: HubConnection,
-  methodName: string,
-) => Promise<void>;
+export type DisconectFromEndpointFunc = (methodName: string) => Promise<void>;
 
 export type SignalRContext = {
   registerEndpointFor: ClientActionDeclarationFunc;
   invokeAsyncFor: InvokeServerActionFunc;
   disconnectFromEndpointFor: DisconectFromEndpointFunc;
-  signalRClient: HubConnection;
 };
 
 export const signalRContext = createContext<SignalRContext>(
@@ -39,12 +32,8 @@ export function SignalRContextProvider({
   hubName,
   children,
 }: SignalRContextProps) {
-  const {
-    signalRClient,
-    registerEndpointFor,
-    invokeAsyncFor,
-    disconnectFromEndpointFor,
-  } = useSignalR(hubName);
+  const { registerEndpointFor, invokeAsyncFor, disconnectFromEndpointFor } =
+    useSignalR(hubName);
 
   return (
     <signalRContext.Provider
@@ -52,7 +41,6 @@ export function SignalRContextProvider({
         invokeAsyncFor,
         registerEndpointFor,
         disconnectFromEndpointFor,
-        signalRClient,
       }}
     >
       {children}

@@ -8,18 +8,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useListUserCreatedMatches } from "../../shared/hooks/integrations/api/match.service";
-import { ListMatchesQueryResponse } from "../../shared/models/matches";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useJoinMatchModal } from "../../features/stories/join-match.modal.form";
+import { useListUserCreatedMatches } from "../../shared/hooks/integrations/api/matches/use-list-user-created-matches.integration";
+import { ListMatchesQueryResponse } from "../../shared/hooks/integrations/api/matches/matches";
 
 export function HomeDashboard() {
   const [abortController] = useState(new AbortController());
 
   const navigate = useNavigate();
-
-  const [isLoadingCreatedMatches, setIsLoadingCreatedMatches] = useState(false);
 
   const { open: openJoinModal } = useJoinMatchModal();
 
@@ -43,6 +41,7 @@ export function HomeDashboard() {
         alert("Share link copied to clipboard");
       })
       .catch((err) => {
+        console.error({ err });
         alert("An Error occurred when coping from clipboard");
       });
   };

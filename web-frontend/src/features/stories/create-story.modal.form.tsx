@@ -1,18 +1,13 @@
 import { create } from "zustand";
-import {
-  EditStoryModalStateHandler,
-  ModalHandlerState,
-} from "../../shared/models/form";
+import { EditStoryModalStateHandler } from "../../shared/models/form";
 import { Box, Button, Card, Modal, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import {
-  createStory,
-  updateStory,
-} from "../../shared/hooks/integrations/api/match.service";
+import { createStory } from "../../shared/hooks/integrations/api/match.service";
 import { Story } from "../../shared/models/matches";
 import { useSnackbar } from "../../shared/ui/snackbar";
 import { useParams } from "react-router";
+import { useUpdateStory } from "../../shared/hooks/integrations/api/matches/use-update-story.integration";
 
 export const useCreateStoryFormModal = create<EditStoryModalStateHandler>()(
   (set) => ({
@@ -31,6 +26,7 @@ interface CreateStoryForm {
 export function CreateStoryFormModal() {
   const { isOpen, close, story } = useCreateStoryFormModal();
   const { showSuccess, showError } = useSnackbar();
+  const { updateStory } = useUpdateStory();
 
   const matchId = Number(useParams()?.matchId);
 

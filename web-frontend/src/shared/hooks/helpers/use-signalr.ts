@@ -17,16 +17,24 @@ export function useSignalR(hubName: string) {
       .withAutomaticReconnect([1, 2, 3, 4, 5])
       .build();
 
+  const [signalRClient] = useState<HubConnection>(createClient());
+
+  useEffect(() => {
+    if (signalRClient.state === HubConnectionState.Disconnected) {
+      signalRClient.start();
+    }
+  }, [hubName]);
+
   const registerEndpointFor = async (
-    signalRClient: HubConnection,
     endpointName: string,
     handler: (...args: unknown[]) => Promise<void> | void,
   ) => {
-    signalRClient.on(endpointName, handler);
+    disconnectFromEndpointFor(endpointName).then(() => {
+      signalRClient.on(endpointName, handler);
+    });
   };
 
   const invokeAsyncFor = async (
-    signalRClient: HubConnection,
     methodName: string,
     ...args: unknown[]
   ): Promise<unknown> => {
@@ -47,10 +55,7 @@ export function useSignalR(hubName: string) {
     }
   };
 
-  const disconnectFromEndpointFor = async (
-    signalRClient: HubConnection,
-    endpointName: string,
-  ) => {
+  const disconnectFromEndpointFor = async (endpointName: string) => {
     const cannotInvokeHubSinceItIsNotConnected = () =>
       signalRClient.state !== HubConnectionState.Connected;
 
@@ -59,16 +64,7 @@ export function useSignalR(hubName: string) {
     signalRClient.off(endpointName);
   };
 
-  const [signalRClient] = useState<HubConnection>(createClient());
-
-  useEffect(() => {
-    if (signalRClient.state === HubConnectionState.Disconnected) {
-      signalRClient.start();
-    }
-  }, [hubName]);
-
   return {
-    signalRClient,
     registerEndpointFor,
     invokeAsyncFor,
     disconnectFromEndpointFor,
