@@ -1,3 +1,3 @@
 export enum SignalRPorts {
-  ToJoinMain = "JoinMatch",
+  ToJoinMatch = "JoinMatch",
 }

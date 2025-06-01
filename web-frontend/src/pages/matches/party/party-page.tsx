@@ -1,17 +1,17 @@
 import { Button, Card, Grid2, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Participant, Vote } from "../../../shared/models/matches";
-import { voteForStory } from "../../../shared/hooks/integrations/api/match.service";
 import { useParams } from "react-router";
 import { StoriesListForm } from "../../../features/stories/stories-list.form";
 import { useSnackbar } from "../../../shared/ui/snackbar";
 import { CurrenlyShowingStoryViewer } from "../../../features/stories/currentVotingStory.form";
 import { useParticipants } from "../../../shared/stores/participants-store";
 import { useAuthStore } from "../../../shared/stores/auth-store";
-import { useMatch } from "../../../shared/stores/match-store";
+import { useMatchStore } from "../../../shared/stores/match-store";
 import { useSignalRContext } from "../../../shared/contexts/signalr.context";
 import { SignalRPorts } from "../../../shared/consts/signalRPorts";
 import { SignalRHooks } from "../../../shared/consts/signalRHooks";
+import { useVoteStory } from "../../../shared/hooks/integrations/api/matches/use-vote-story.integration";
 
 export function PartyPage() {
   const complexities = [
@@ -46,19 +46,19 @@ export function PartyPage() {
   ];
 
   const matchId = Number(useParams().matchId);
+  const { vote, isVoting } = useVoteStory();
 
   const { showSuccess, showError } = useSnackbar();
 
-  const { registerEndpointFor, invokeAsyncFor, disconnectFromEndpointFor } =
-    useSignalRContext();
+  const { registerEndpointFor, invokeAsyncFor } = useSignalRContext();
 
   const { participants, voteOrReplace } = useParticipants();
   const { me } = useAuthStore();
-  const { currentShowingStory } = useMatch();
+  const { currentShowingStory } = useMatchStore();
 
   // Bug with Closures, Stories not updating after creation for be shown to the user
   useEffect(() => {
-    invokeAsyncFor(SignalRPorts.ToJoinMain, Number(matchId));
+    invokeAsyncFor(SignalRPorts.ToJoinMatch, Number(matchId));
 
     registerEndpointFor(SignalRHooks.OnAnyoneVote, (vote) => {
       const voteObj = vote as {
@@ -95,7 +95,7 @@ export function PartyPage() {
   const votePointsAs = (points: number) => {
     setIsVotingComplexity(points);
 
-    voteForStory(matchId, currentShowingStory!.storyId, points)
+    vote(currentShowingStory!, points)
       .then(() => {
         showSuccess(`Voted Story with a complexity about ${points} points`);
       })

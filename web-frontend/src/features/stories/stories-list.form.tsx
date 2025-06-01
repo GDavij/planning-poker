@@ -1,11 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Story } from "../../shared/models/matches";
-import {
-  deleteStory,
-  finishMatch,
-  selectStoryToAnalyze,
-} from "../../shared/hooks/integrations/api/match.service";
-import { useNavigate, useParams } from "react-router";
+import { Delete, Edit, Visibility } from "@mui/icons-material";
 import {
   Button,
   CircularProgress,
@@ -15,19 +8,24 @@ import {
   Typography,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { animated, useSpring, useTransition } from "@react-spring/web";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { animated, useSpring, useTransition } from "@react-spring/web";
-import { useCreateStoryFormModal } from "./create-story.modal.form";
-import { useListSettleDetector } from "../../shared/hooks/helpers/use-list-settle-detector";
-import { useSnackbar } from "../../shared/ui/snackbar";
-import { Delete, Edit, Visibility } from "@mui/icons-material";
-import { useConfirmation } from "../../shared/ui/confirmation-dialog";
-import { AppCard } from "../../shared/ui/app-card";
-import { useSignalRContext } from "../../shared/contexts/signalr.context";
-import { useListMatchStories } from "../../shared/hooks/integrations/api/matches/use-list-matches-stories.integration";
+import { useNavigate, useParams } from "react-router";
 import { SignalRHooks } from "../../shared/consts/signalRHooks";
-import { useUpdateStory } from "../../shared/hooks/integrations/api/matches/use-update-story.integration";
+import { useSignalRContext } from "../../shared/contexts/signalr.context";
+import { useListSettleDetector } from "../../shared/hooks/helpers/use-list-settle-detector";
+import { useListMatchStories } from "../../shared/hooks/integrations/api/matches/use-list-matches-stories.integration";
+import { useSaveStory } from "../../shared/hooks/integrations/api/matches/use-save-story.integration";
+import { Story } from "../../shared/models/matches";
+import { AppCard } from "../../shared/ui/app-card";
+import { useConfirmation } from "../../shared/ui/confirmation-dialog";
+import { useSnackbar } from "../../shared/ui/snackbar";
+import { useCreateStoryFormModalStore } from "../../shared/stores/create-story-form-modal.store";
+import { useDeleteStory } from "../../shared/hooks/integrations/api/matches/use-delete-story.integration";
+import { useSelectStory } from "../../shared/hooks/integrations/api/matches/use-select-story.integration";
+import { useFinishMatch } from "../../shared/hooks/integrations/api/matches/use-finish-match.integration";
 
 const StoriesContainer = styled(Stack)(({ theme }) => ({
   borderRight: "2px solid #eef",
@@ -36,7 +34,7 @@ const StoriesContainer = styled(Stack)(({ theme }) => ({
   margin: 4,
 }));
 
-const StoryItem = styled(Stack)(({ theme }) => ({
+const StoryItem = styled(Stack)(() => ({
   minHeight: 100,
   background: "#fefeff",
   border: "1px solid #fff",
@@ -46,7 +44,7 @@ const StoryItem = styled(Stack)(({ theme }) => ({
 
 const AnimatedStoryItem = animated(StoryItem);
 
-const StoryActions = styled(Stack)(({ theme }) => ({
+const StoryActions = styled(Stack)(() => ({
   minHeight: 120,
   background: "#ddf",
   borderTop: "2px solid #fff",
@@ -68,7 +66,9 @@ interface DragItem {
 export function StoryCard({ story, index, moveStory }: StoryCardProps) {
   const ref = useRef<HTMLDivElement>(null);
 
-  const { open } = useCreateStoryFormModal();
+  const { deleteStory, isDeleting } = useDeleteStory();
+  const { select, isSelecting } = useSelectStory();
+  const { open } = useCreateStoryFormModalStore();
   const { showSuccess, showError } = useSnackbar();
 
   const [{ handlerId }, drop] = useDrop({
@@ -162,7 +162,7 @@ export function StoryCard({ story, index, moveStory }: StoryCardProps) {
 
   const handleSelect = useCallback(
     (story: Story) => {
-      selectStoryToAnalyze(story).catch(() => {
+      select(story).catch(() => {
         showError("Could not select story for analysis for now...");
       });
     },
@@ -274,10 +274,11 @@ export function StoriesListForm() {
   const { stories, setStoriesFunc, isFetching } = useListMatchStories(matchId);
   const navigate = useNavigate();
   const { registerEndpointFor } = useSignalRContext();
-  const { open } = useCreateStoryFormModal();
+  const { open } = useCreateStoryFormModalStore();
   const { showSuccess, showError } = useSnackbar();
   const { confirm } = useConfirmation();
-  const { updateStory } = useUpdateStory();
+  const { saveStory } = useSaveStory();
+  const { finish, isFinishing } = useFinishMatch();
 
   useEffect(() => {
     registerEndpointFor(SignalRHooks.OnMatchClosed, () => {
@@ -351,7 +352,7 @@ export function StoriesListForm() {
     async (stories: Story[]) => {
       try {
         for (const story of stories) {
-          await updateStory(story);
+          await saveStory(story);
         }
 
         return Promise.resolve().then(() => {
@@ -399,7 +400,7 @@ export function StoriesListForm() {
     });
 
     if (shouldEndMatch) {
-      finishMatch(matchId)
+      finish(matchId)
         .then(() => showSuccess("Match is being finished"))
         .catch(() => showError("Match has been Finished"));
     }

@@ -6,7 +6,7 @@ using Domain.Abstractions;
 using Domain.Abstractions.SignalR;
 using Domain.Entities;
 
-namespace Application.SignalR;
+namespace Application.SignalR.MatchHub;
 
 public class MatchSignalRIntegrationIntegrationClient : IMatchSignalRIntegrationIntegrationClient
 {
@@ -17,49 +17,44 @@ public class MatchSignalRIntegrationIntegrationClient : IMatchSignalRIntegration
         _signalRService = signalRService;
     }
 
-    public Task NotifySelectStoryToVoteForGroupAsync(string groupId, Story story)
-    {
-        return _signalRService.SendAsyncForGroup(groupId, "SelectStoryToVoteAs", story.StoryId);
-    }
-
     public Task NotifySelectStoryToVoteForMatchAsync(Story story)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForGroup(story.MatchId.ToString(), MatchHubHooks.OnSelectedStoryToVote);
     }
 
     public Task NotifyApproveJoinRequestForParticipantAsync(Participant participant)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForClient(participant.SignalRConnectionId!, MatchHubHooks.OnApproveJoinRequest);
     }
 
     public Task NotifyRejectJoinRequestForParticipantAsync(Participant participant)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForClient(participant.SignalRConnectionId!, MatchHubHooks.OnRejectedJoinRequest);
     }
 
     public Task NotifyClosedMatchAsync(Match match)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForGroup(match.MatchId.ToString(), MatchHubHooks.OnMatchClosed);
     }
 
     public Task NotifyCurrentListOfParticipantsOfMatch(Match currentMatch, IEnumerable<ListParticipantsQueryResponse> participants)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForGroup(currentMatch.MatchId.ToString(), MatchHubHooks.OnParticipantJoin);
     }
 
     public Task NotifyCurrentListOfStoriesForMatchAsync(Match currentMatch, IEnumerable<ListStoriesQueryResponse> stories)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForGroup(currentMatch.MatchId.ToString(), MatchHubHooks.OnListMatchStories, stories);
     }
 
     public Task NotifyStoryVoteAsync(StoryPoint storyPoint)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForGroup(storyPoint.MatchId.ToString(), MatchHubHooks.OnParticipantVote, storyPoint);
     }
 
     public Task NotifyAllParticipantsVotedForStoryAsync(Story story)
     {
-        throw new NotImplementedException();
+        return _signalRService.SendAsyncForGroup(story.MatchId.ToString(), MatchHubHooks.OnEveryoneVoted, story);
     }
 
     public async Task JoinParticipantToMatchAsync(Participant participant, Match match, INotificationService notificationService)

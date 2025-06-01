@@ -5,7 +5,3 @@ export interface ModalHandlerState<TArg> {
   open: (story: TArg | null = null) => void;
   close: () => void;
 }
-
-export interface EditStoryModalStateHandler extends ModalHandlerState<Story> {
-  story: Story | null;
-}

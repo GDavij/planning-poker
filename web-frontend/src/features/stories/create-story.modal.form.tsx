@@ -1,22 +1,11 @@
-import { create } from "zustand";
-import { EditStoryModalStateHandler } from "../../shared/models/form";
 import { Box, Button, Card, Modal, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { createStory } from "../../shared/hooks/integrations/api/match.service";
+import { useEffect } from "react";
 import { Story } from "../../shared/models/matches";
 import { useSnackbar } from "../../shared/ui/snackbar";
 import { useParams } from "react-router";
-import { useUpdateStory } from "../../shared/hooks/integrations/api/matches/use-update-story.integration";
-
-export const useCreateStoryFormModal = create<EditStoryModalStateHandler>()(
-  (set) => ({
-    open: (story: Story | null = null) => set({ isOpen: true, story }),
-    close: () => set({ isOpen: false }),
-    isOpen: false,
-    story: null,
-  }),
-);
+import { useSaveStory } from "../../shared/hooks/integrations/api/matches/use-save-story.integration";
+import { useCreateStoryFormModalStore } from "../../shared/stores/create-story-form-modal.store";
 
 interface CreateStoryForm {
   name: string;
@@ -24,13 +13,11 @@ interface CreateStoryForm {
 }
 
 export function CreateStoryFormModal() {
-  const { isOpen, close, story } = useCreateStoryFormModal();
-  const { showSuccess, showError } = useSnackbar();
-  const { updateStory } = useUpdateStory();
-
   const matchId = Number(useParams()?.matchId);
 
-  const [isSavingStory, setIsSavingStory] = useState(false);
+  const { isOpen, close, story } = useCreateStoryFormModalStore();
+  const { showSuccess, showError } = useSnackbar();
+  const { saveStory, isSaving } = useSaveStory();
 
   const {
     register,
@@ -41,34 +28,31 @@ export function CreateStoryFormModal() {
 
   useEffect(() => {
     reset(story as CreateStoryForm);
-    setIsSavingStory(false);
   }, [isOpen]);
 
   const save = (form: CreateStoryForm) => {
-    setIsSavingStory(true);
+    let storyToSave: Partial<Story>;
+
     if (story !== null) {
-      let storyToUpdate: Story = {
+      storyToSave = {
         ...story,
         name: form.name,
         storyNumber: form.storyNumber,
       };
-
-      updateStory(storyToUpdate)
-        .then(() => showSuccess("Story updated with Success!"))
-        .catch(() => showError("Failed to update Story"))
-        .finally(close);
     } else {
-      const storyToAdd: Partial<Story> = {
+      storyToSave = {
         matchId,
         name: form.name,
         storyNumber: form.storyNumber,
       };
-
-      createStory(storyToAdd as Story)
-        .then(() => showSuccess("Story added with Success!"))
-        .catch(() => showError("Failed to add new Story"))
-        .finally(close);
     }
+
+    saveStory(storyToSave as Story)
+      .then(() => {
+        showSuccess("Story has been saved with Success!");
+        close();
+      })
+      .catch(() => showError("Failed to add new Story"));
   };
 
   return (
@@ -87,11 +71,7 @@ export function CreateStoryFormModal() {
         <Card sx={{ paddingX: 4, paddingY: 2 }}>
           <Stack spacing={4}>
             <Stack direction={"row"} justifyContent={"flex-end"}>
-              <Button
-                variant="outlined"
-                onClick={close}
-                disabled={isSavingStory}
-              >
+              <Button variant="outlined" onClick={close} disabled={isSaving}>
                 Close
               </Button>
             </Stack>
@@ -125,13 +105,8 @@ export function CreateStoryFormModal() {
                   helperText={errors.storyNumber?.message}
                 />
 
-                <Button
-                  variant="contained"
-                  type="submit"
-                  loading={isSavingStory}
-                >
-                  {" "}
-                  Save{" "}
+                <Button variant="contained" type="submit" loading={isSaving}>
+                  Save
                 </Button>
               </Stack>
             </form>

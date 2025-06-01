@@ -9,7 +9,7 @@ interface MatchActions {
   showStory: (story: Story | null) => void;
 }
 
-export const useMatch = create<MatchActions>((set) => ({
+export const useMatchStore = create<MatchActions>((set) => ({
   currentShowingStory: null,
   stories: [],
   setStories: (stories: Story[]) => set({ stories }),

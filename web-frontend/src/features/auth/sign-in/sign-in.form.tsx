@@ -4,6 +4,14 @@ import {
   Container,
   Typography,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Input,
+  FormHelperText,
+  TextField,
+  Divider,
+  Card,
+  IconButton,
 } from "@mui/material";
 import { Google } from "@mui/icons-material";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -12,11 +20,24 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import { UseSaveSession } from "../../../shared/hooks/integrations/api/auth/save-session.integration";
 import { useAutoLogin } from "../../../shared/hooks/integrations/api/auth/auto-login.integration";
+import { useForm } from "react-hook-form";
+import { useEmailAndPasswordLogin } from "../../../shared/hooks/integrations/api/auth/use-email-and-password-login-hook";
+
+type EmailAndPasswordLoginForm = {
+  email: string;
+  password: string;
+};
 
 export function SignInForm() {
   const navigate = useNavigate();
   const { saveSession } = UseSaveSession();
   const { registerAutoLogin } = useAutoLogin();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EmailAndPasswordLoginForm>({});
 
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
@@ -47,18 +68,76 @@ export function SignInForm() {
       });
   };
 
-  return (
-    <Stack spacing={3} alignItems="center">
-      <Container>
-        <Typography variant="h4" align="center">
-          Sign in
-        </Typography>
-        <Typography variant="subtitle2" align="center">
-          Start planning your sprints
-        </Typography>
-      </Container>
+  const { loginWithEmailAndPassword } = useEmailAndPasswordLogin();
 
-      <Stack>
+  return (
+    <form onSubmit={handleSubmit(loginWithEmailAndPassword)}>
+      <Container sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <TextField
+          fullWidth
+          type={"email"}
+          id="email-address"
+          label="E-mail Address"
+          helperText={errors.email?.message}
+          error={!!errors.email?.message}
+          {...register("email", {
+            required: {
+              value: true,
+              message: "E-mail Address is required",
+            },
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: "Enter a valid e-mail address",
+            },
+            maxLength: {
+              value: 60,
+              message: "E-mail Address must have a max of 60 characters",
+            },
+          })}
+        />
+
+        <TextField
+          fullWidth
+          type={"email"}
+          id="email-address"
+          label="E-mail Address"
+          helperText={errors.email?.message}
+          error={!!errors.email?.message}
+          {...register("email", {
+            required: {
+              value: true,
+              message: "E-mail Address is required",
+            },
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: "Enter a valid e-mail address",
+            },
+            maxLength: {
+              value: 60,
+              message: "E-mail Address must have a max of 60 characters",
+            },
+          })}
+        />
+        <Button type="submit" fullWidth variant="contained">
+          Enter
+        </Button>
+
+        <Divider />
+
+        <Stack>
+          <Typography variant="h6" align="center">
+            SSO
+          </Typography>
+          <Stack direction={"row"} justifyContent={"center"}>
+            <IconButton type="button">
+              <Google sx={{ color: "#4285F4" }} />
+            </IconButton>
+          </Stack>
+        </Stack>
+      </Container>
+    </form>
+  );
+  /* <Stack>
         <Container sx={{ display: "flex", justifyContent: "center" }}>
           <Button
             onClick={signInGoogle}
@@ -81,7 +160,5 @@ export function SignInForm() {
             )}
           </Button>
         </Container>
-      </Stack>
-    </Stack>
-  );
+      </Stack> */
 }

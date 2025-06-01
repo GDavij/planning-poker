@@ -1,13 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
-import { routes } from "./routes";
+import { router } from "./router";
 import { ThemeProvider } from "@emotion/react";
 import { CssBaseline } from "@mui/material";
 import theme from "./theme.mui";
 import { SnackbarProvider } from "./shared/ui/snackbar";
 import { ConfirmationProvider } from "./shared/ui/confirmation-dialog";
 import { NotificationErrorBoundary } from "./shared/middlewares/error-boundary.middleware";
+import "./main.css";
 
 // Add this near the top of the file
 window.addEventListener("error", (event) => {
@@ -26,7 +27,7 @@ createRoot(document.getElementById("root")!).render(
       <SnackbarProvider>
         <NotificationErrorBoundary>
           <ConfirmationProvider>
-            <RouterProvider router={routes} />
+            <RouterProvider router={router} />
           </ConfirmationProvider>
         </NotificationErrorBoundary>
       </SnackbarProvider>

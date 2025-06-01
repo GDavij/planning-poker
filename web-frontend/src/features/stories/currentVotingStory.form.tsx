@@ -7,26 +7,30 @@ import { useSnackbar } from "../../shared/ui/snackbar";
 import { useDebounce } from "../../shared/hooks/helpers/debounce";
 import { Story } from "../../shared/models/matches";
 import { PartyParticipantsViewer } from "../../shared/ui/party-participants-viewer";
-import { useMatch } from "../../shared/stores/match-store";
-import { useParams } from "react-router";
+import { useMatchStore } from "../../shared/stores/match-store";
 import { useSignalRContext } from "../../shared/contexts/signalr.context";
+import { SignalRHooks } from "../../shared/consts/signalRHooks";
 
 export function CurrenlyShowingStoryViewer() {
-  const matchId = Number(useParams().matchId);
-
-  const { signalRClient, registerEndpointFor, disconnectFromEndpointFor } =
-    useSignalRContext();
+  const { registerEndpointFor } = useSignalRContext();
   const { showInfo } = useSnackbar();
+  const { showStory, currentShowingStory, stories } = useMatchStore();
 
-  const { showStory, currentShowingStory, stories } = useMatch();
+  const [springAnimationProps, springAnimation] = useSpring(
+    {
+      from: { transform: "translateX(-100%)" },
+      to: { transform: "translateX(0%)" },
+      config: { tension: 200, friction: 20 },
+    },
+    [stories],
+  );
 
-  const handleSelectStory = useCallback(
+  const AnimateMovingStoryWithId = useCallback(
     (storyId: number) => {
-      console.log({ stories, storyId });
       const storyToAnalyze = stories.find((s) => s.storyId == storyId) || null;
 
       showStory(storyToAnalyze);
-      api.start({
+      springAnimation.start({
         from: { transform: "translateX(-100%)" },
         to: { transform: "translateX(0%)" },
         reset: true,
@@ -40,36 +44,21 @@ export function CurrenlyShowingStoryViewer() {
     [stories],
   );
 
-  const { debouncedFn } = useDebounce<number, (storyId: number) => void>(
-    handleSelectStory,
-    400,
-  );
-
-  const [animationProps, api] = useSpring(
-    {
-      from: { transform: "translateX(-100%)" },
-      to: { transform: "translateX(0%)" },
-      config: { tension: 200, friction: 20 },
-    },
-    [currentShowingStory?.storyId],
-  );
+  const { debouncedFn: tryAnimateMovingStoryWithId } = useDebounce<
+    number,
+    (storyId: number) => void
+  >(AnimateMovingStoryWithId, 400);
 
   useEffect(() => {
-    disconnectFromEndpointFor(signalRClient, "SelectStoryToVoteAs").then(() => {
-      registerEndpointFor(signalRClient, "SelectStoryToVoteAs", (storyId) =>
-        debouncedFn(storyId as number),
-      );
-    });
-
-    return () => {
-      disconnectFromEndpointFor(signalRClient, "SelectStoryToVoteAs");
-    };
+    registerEndpointFor(SignalRHooks.OnSelectedStoryToVote, (storyId) =>
+      tryAnimateMovingStoryWithId(storyId as number),
+    );
   }, [stories]);
 
   useEffect(() => {
     showStory(null);
 
-    api.start({
+    springAnimation.start({
       from: { transform: "translateX(-100%)" },
       to: { transform: "translateX(0%)" },
       reset: true,
@@ -80,7 +69,12 @@ export function CurrenlyShowingStoryViewer() {
   return (
     <Stack spacing={4}>
       <PartyParticipantsViewer />
-      <animated.div style={animationProps}>
+      {/* @ts-ignore */}
+      <animated.div
+        style={{
+          ...springAnimationProps,
+        }}
+      >
         <AppCard
           sx={{
             paddingX: 4,

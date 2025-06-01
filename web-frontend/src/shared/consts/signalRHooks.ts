@@ -1,5 +1,10 @@
 export enum SignalRHooks {
-  OnListMatchStories = "UpdateStoriesOfMatchWith",
+  OnListMatchStories = "StoriesUpdated",
   OnMatchClosed = "MatchClosed",
-  OnAnyoneVote = "SomeoneVoted",
+  OnSelectedStoryToVote = "StorySelected",
+  OnApproveJoinRequest = "JoinRequestApproved",
+  OnParticipantJoin = "ParticipantJoined",
+  OnParticipantVote = "ParticipantVoted",
+  OnRejectedJoinRequest = "JoinRequestRejected",
+  OnEveryoneVoted = "ParticipantsHaveVoted",
 }

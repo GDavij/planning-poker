@@ -6,45 +6,26 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect } from "react";
-import {
-  SignalRMatchHubClientEndpoints,
-  SignalRMatchHubServerEndpoints,
-} from "../../../shared/consts/signalr-match-hub.endpoints";
 import { useNavigate, useParams } from "react-router";
 import { useSignalRContext } from "../../../shared/contexts/signalr.context";
+import { SignalRHooks } from "../../../shared/consts/signalRHooks";
+import { SignalRPorts } from "../../../shared/consts/signalRPorts";
 
 export function JoinMatchPage() {
   const { matchId } = useParams();
 
   const navigate = useNavigate();
 
-  const {
-    invokeAsyncFor,
-    registerEndpointFor,
-    disconnectFromEndpointFor,
-    signalRClient,
-  } = useSignalRContext();
+  const { invokeAsyncFor, registerEndpointFor } = useSignalRContext();
 
   useEffect(() => {
-    disconnectFromEndpointFor(
-      signalRClient,
-      SignalRMatchHubClientEndpoints.ApproveJoinRequest,
-    ).then(() => {
-      registerEndpointFor(
-        signalRClient,
-        SignalRMatchHubClientEndpoints.ApproveJoinRequest,
-        () => {
-          navigate(`/dashboard/matches/party/${matchId}`);
-        },
-      ).then(() => {
-        invokeAsyncFor(
-          signalRClient,
-          SignalRMatchHubServerEndpoints.JoinMatch,
-          Number(matchId),
-        );
-      });
+    registerEndpointFor(SignalRHooks.OnApproveJoinRequest, () => {
+      navigate(`/dashboard/matches/party/${matchId}`);
+    }).then(() => {
+      invokeAsyncFor(SignalRPorts.ToJoinMatch, Number(matchId));
     });
   }, []);
+
   return (
     <Box
       sx={{

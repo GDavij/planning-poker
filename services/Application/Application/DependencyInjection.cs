@@ -1,6 +1,7 @@
 using Application.Abstractions.SignalR;
 using Application.Notification;
 using Application.SignalR;
+using Application.SignalR.MatchHub;
 using Application.UseCases.Management.Accounts.CreateAccount;
 using Application.UseCases.Management.Accounts.Me;
 using Application.UseCases.Planning.Matches.ApproveJoinRequest;
