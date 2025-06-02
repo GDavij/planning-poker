@@ -3,20 +3,14 @@ import {
   Stack,
   Container,
   Typography,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Input,
-  FormHelperText,
   TextField,
   Divider,
-  Card,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
-import { Google } from "@mui/icons-material";
+import { Google, Visibility, VisibilityOff } from "@mui/icons-material";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import firebase from "../../../drivers/firebase";
-import { useNavigate } from "react-router";
 import { useState } from "react";
 import { UseSaveSession } from "../../../shared/hooks/integrations/api/auth/save-session.integration";
 import { useAutoLogin } from "../../../shared/hooks/integrations/api/auth/auto-login.integration";
@@ -29,7 +23,6 @@ type EmailAndPasswordLoginForm = {
 };
 
 export function SignInForm() {
-  const navigate = useNavigate();
   const { saveSession } = UseSaveSession();
   const { registerAutoLogin } = useAutoLogin();
 
@@ -38,13 +31,10 @@ export function SignInForm() {
     handleSubmit,
     formState: { errors },
   } = useForm<EmailAndPasswordLoginForm>({});
-
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-
-  const redirectToDashboard = () => navigate("/dashboard");
+  const [isShowingPassword, setIsShowingPassword] = useState(false);
+  const toggleShowPassword = () => setIsShowingPassword((v) => !v);
 
   const signInGoogle = () => {
-    setIsAuthenticating(true);
     const googleProvider = new GoogleAuthProvider();
     const auth = getAuth(firebase);
 
@@ -56,19 +46,22 @@ export function SignInForm() {
           .getIdToken()
           .then((token) => saveSession(token))
           .then(registerAutoLogin)
-          .then(redirectToDashboard)
+          // .then(useNavigate())
           .catch((error) => {
-            setIsAuthenticating(false);
             throw error;
           });
       })
       .catch((reject) => {
-        setIsAuthenticating(false);
+        // setIsAuthenticating(false);
         throw reject;
       });
   };
 
-  const { loginWithEmailAndPassword } = useEmailAndPasswordLogin();
+  const { loginWithEmailAndPassword, isLogin: isLoginUserAndPassword } =
+    useEmailAndPasswordLogin();
+
+  // const {} = useGoogleFirebaseSSOLogin();
+  // STOPED HERE
 
   return (
     <form onSubmit={handleSubmit(loginWithEmailAndPassword)}>
@@ -76,45 +69,58 @@ export function SignInForm() {
         <TextField
           fullWidth
           type={"email"}
-          id="email-address"
-          label="E-mail Address"
+          id="email"
+          label="E-mail"
           helperText={errors.email?.message}
           error={!!errors.email?.message}
           {...register("email", {
             required: {
               value: true,
-              message: "E-mail Address is required",
+              message: "E-mail is required",
             },
             pattern: {
               value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Enter a valid e-mail address",
+              message: "Enter a valid e-mail",
             },
             maxLength: {
               value: 60,
-              message: "E-mail Address must have a max of 60 characters",
+              message: "E-mail must have a max of 60 characters",
             },
           })}
         />
 
         <TextField
           fullWidth
-          type={"email"}
-          id="email-address"
-          label="E-mail Address"
-          helperText={errors.email?.message}
-          error={!!errors.email?.message}
-          {...register("email", {
+          type={isShowingPassword ? "text" : "password"}
+          id="password"
+          label="Password"
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={toggleShowPassword}>
+                    {isShowingPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
+          helperText={errors.password?.message}
+          error={!!errors.password?.message}
+          {...register("password", {
             required: {
               value: true,
-              message: "E-mail Address is required",
+              message: "Password is required",
             },
             pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Enter a valid e-mail address",
+              value:
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/,
+              message:
+                "Password must have at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character",
             },
             maxLength: {
-              value: 60,
-              message: "E-mail Address must have a max of 60 characters",
+              value: 512,
+              message: "Password must have a max of 512 characters",
             },
           })}
         />
