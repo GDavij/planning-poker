@@ -1,7 +1,7 @@
 export enum RoutesDef {
   Home = "/",
   SignIn = "/sign-in",
-  CreateAccount = "/sign-in/new",
+  CreateAccount = "/new-account",
   About = "/about",
   Engineering = "/engineering",
 }

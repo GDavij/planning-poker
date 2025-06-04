@@ -7,8 +7,9 @@ import { AuthenticatedLayout } from "./shared/middlewares/authenticated.middlewa
 import { PartyPage } from "./pages/matches/party/party-page";
 import { JoinMatchPage } from "./pages/matches/join/join-match.page";
 import { UnauthenticatedLayout } from "./shared/middlewares/unauthenticated.middleware";
-import { SignInPage } from "./pages/login/sign-in/sign-in";
+import { SignInPage } from "./pages/auth/sign-in/sign-in";
 import { LandingPage } from "./pages/landing-page";
+import { newAccountPage } from "./pages/auth/new-account/new-account";
 
 const CssLayout = () => {
   return (
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
           {
             path: "sign-in",
             Component: SignInPage,
+          },
+          {
+            path: "new-account",
+            Component: newAccountPage,
           },
         ],
       },
